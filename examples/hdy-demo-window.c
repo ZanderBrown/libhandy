@@ -275,6 +275,21 @@ dialog_action_clicked_cb (GtkButton     *btn,
   gtk_widget_show (dlg);
 }
 
+static void
+switcher_demo_clicked_cb (GtkButton     *btn,
+                          ExampleWindow *self)
+{
+  GtkBuilder *builder;
+  GtkWidget *win;
+
+  builder = gtk_builder_new_from_resource ("/sm/puri/handy/demo/ui/switcher-window.ui");
+
+  win = GTK_WIDGET (gtk_builder_get_object (builder, "window"));
+  gtk_window_set_transient_for (GTK_WINDOW (win), GTK_WINDOW (self));
+
+  gtk_widget_show (win);
+}
+
 HdyDemoWindow *
 hdy_demo_window_new (GtkApplication *application)
 {
@@ -350,6 +365,7 @@ hdy_demo_window_class_init (HdyDemoWindowClass *klass)
   gtk_widget_class_bind_template_callback_full (widget_class, "adj_arrows_duration_value_changed_cb", G_CALLBACK(adj_arrows_duration_value_changed_cb));
   gtk_widget_class_bind_template_callback_full (widget_class, "dialog_clicked_cb", G_CALLBACK(dialog_clicked_cb));
   gtk_widget_class_bind_template_callback_full (widget_class, "dialog_action_clicked_cb", G_CALLBACK(dialog_action_clicked_cb));
+  gtk_widget_class_bind_template_callback_full (widget_class, "switcher_demo_clicked_cb", G_CALLBACK(switcher_demo_clicked_cb));
 }
 
 static void
