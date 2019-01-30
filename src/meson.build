@@ -74,6 +74,7 @@ src_headers = [
   'hdy-main.h',
   'hdy-search-bar.h',
   'hdy-string-utf8.h',
+  'hdy-switcher.h',
   'hdy-title-bar.h',
   'hdy-value-object.h',
 ]
@@ -107,6 +108,7 @@ src_sources = [
   'hdy-main.c',
   'hdy-search-bar.c',
   'hdy-string-utf8.c',
+  'hdy-switcher.c',
   'hdy-title-bar.c',
   'hdy-value-object.c',
 ]

@@ -24,6 +24,7 @@
     </glade-widget-class>
     <glade-widget-class name="HdyLeaflet" generic-name="leaflet" title="Leaflet"/>
     <glade-widget-class name="HdySearchBar" generic-name="searchbar" title="Search Bar" since="0.0.6"/>
+    <glade-widget-class name="HdySwitcher" generic-name="switcher" title="Switcher"  since="0.0.8"/>
     <glade-widget-class name="HdyTitleBar" generic-name="titlebar" title="Title Bar"/>
   </glade-widget-classes>
 
@@ -38,6 +39,7 @@
     <glade-widget-class-ref name="HdyHeaderGroup"/>
     <glade-widget-class-ref name="HdyLeaflet"/>
     <glade-widget-class-ref name="HdySearchBar"/>
+    <glade-widget-class-ref name="HdySwitcher"/>
     <glade-widget-class-ref name="HdyTitleBar"/>
   </glade-widget-group>
 </glade-catalog>
