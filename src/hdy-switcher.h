@@ -31,10 +31,10 @@ struct _HdySwitcherClass {
 G_DECLARE_DERIVABLE_TYPE (HdySwitcher, hdy_switcher, HDY, SWITCHER, GtkBox)
 
 GtkWidget *hdy_switcher_new           (void);
-void       hdy_switcher_set_icon_size (HdySwitcher *switcher,
-                                       gint         icon_size);
-void       hdy_switcher_set_stack     (HdySwitcher *switcher,
+void       hdy_switcher_set_icon_size (HdySwitcher *self,
+                                       GtkIconSize  icon_size);
+void       hdy_switcher_set_stack     (HdySwitcher *self,
                                        GtkStack    *stack);
-GtkStack  *hdy_switcher_get_stack     (HdySwitcher *switcher);
+GtkStack  *hdy_switcher_get_stack     (HdySwitcher *self);
 
 G_END_DECLS
