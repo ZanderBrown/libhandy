@@ -11,6 +11,205 @@
 
 #include "hdy-switcher.h"
 
+typedef struct {
+  GtkWidget *wrap;
+  GtkWidget *image;
+  GtkWidget *label;
+} HdySwitcherButtonPrivate;
+
+enum {
+  BTN_PROP_0,
+  BTN_PROP_ICON_SIZE,
+  BTN_PROP_ICON_NAME,
+  BTN_PROP_NEEDS_ATTENTION,
+  BTN_PROP_LABEL,
+  BTN_PROP_ORIENTATION
+};
+
+G_DEFINE_TYPE_WITH_CODE (HdySwitcherButton, hdy_switcher_button, GTK_TYPE_RADIO_BUTTON,
+                         G_ADD_PRIVATE (HdySwitcherButton)
+                         G_IMPLEMENT_INTERFACE (GTK_TYPE_ORIENTABLE, NULL))
+
+static void
+hdy_switcher_button_init (HdySwitcherButton *self)
+{
+  HdySwitcherButtonPrivate *priv;
+
+  priv = hdy_switcher_button_get_instance_private (self);
+
+  priv->wrap = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 8);
+  gtk_widget_show (priv->wrap);
+  gtk_container_add (GTK_CONTAINER (self), priv->wrap);
+
+  priv->image = g_object_new (GTK_TYPE_IMAGE,
+                              "icon-size", GTK_ICON_SIZE_BUTTON,
+                              NULL);
+  gtk_widget_show (priv->image);
+  gtk_container_add (GTK_CONTAINER (priv->wrap), priv->image);
+
+  priv->label = gtk_label_new (NULL);
+  gtk_widget_show (priv->label);
+  gtk_container_add (GTK_CONTAINER (priv->wrap), priv->label);
+
+  gtk_widget_set_focus_on_click (GTK_WIDGET (self), FALSE);
+  gtk_toggle_button_set_mode (GTK_TOGGLE_BUTTON (self), FALSE);
+}
+
+
+static void
+hdy_switcher_button_get_property (GObject      *object,
+                                  guint         prop_id,
+                                  GValue       *value,
+                                  GParamSpec   *pspec)
+{
+  HdySwitcherButton *self = HDY_SWITCHER_BUTTON (object);
+  HdySwitcherButtonPrivate *priv = hdy_switcher_button_get_instance_private (self);
+  GtkStyleContext *context;
+
+  switch (prop_id) {
+    case BTN_PROP_ICON_SIZE:
+      g_object_get_property (G_OBJECT (priv->image), "icon-size", value);
+      break;
+
+    case BTN_PROP_ICON_NAME:
+      g_object_get_property (G_OBJECT (priv->image), "icon-name", value);
+      break;
+
+    case BTN_PROP_NEEDS_ATTENTION:
+      context = gtk_widget_get_style_context (GTK_WIDGET (priv->label));
+      g_value_set_boolean (value,
+                           gtk_style_context_has_class (context,
+                                                        GTK_STYLE_CLASS_NEEDS_ATTENTION));
+      break;
+
+    case BTN_PROP_LABEL:
+      g_object_get_property (G_OBJECT (priv->label), "label", value);
+      break;
+
+    case BTN_PROP_ORIENTATION:
+      g_object_get_property (G_OBJECT (priv->wrap), "orientation", value);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+    }
+}
+
+static void
+hdy_switcher_button_set_property (GObject      *object,
+                                  guint         prop_id,
+                                  const GValue *value,
+                                  GParamSpec   *pspec)
+{
+  HdySwitcherButton *self = HDY_SWITCHER_BUTTON (object);
+  HdySwitcherButtonPrivate *priv = hdy_switcher_button_get_instance_private (self);
+  GtkStyleContext *context;
+
+  switch (prop_id) {
+    case BTN_PROP_ICON_SIZE:
+      g_message ("is: %s %i", G_VALUE_TYPE_NAME(value), g_value_get_int(value));
+      g_object_set_property (G_OBJECT (priv->image), "icon-size", value);
+      break;
+
+    case BTN_PROP_ICON_NAME:
+      g_object_set_property (G_OBJECT (priv->image), "icon-name", value);
+      break;
+
+    case BTN_PROP_NEEDS_ATTENTION:
+      context = gtk_widget_get_style_context (GTK_WIDGET (priv->label));
+      if (g_value_get_boolean (value))
+        gtk_style_context_add_class (context, GTK_STYLE_CLASS_NEEDS_ATTENTION);
+      else
+        gtk_style_context_remove_class (context, GTK_STYLE_CLASS_NEEDS_ATTENTION);
+      break;
+
+    case BTN_PROP_LABEL:
+      g_object_set_property (G_OBJECT (priv->label), "label", value);
+      break;
+
+    case BTN_PROP_ORIENTATION:
+      g_object_set_property (G_OBJECT (priv->wrap), "orientation", value);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+    }
+}
+
+static void
+hdy_switcher_button_class_init (HdySwitcherButtonClass *klass)
+{
+  GObjectClass   *object_class = G_OBJECT_CLASS (klass);
+  GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
+
+  object_class->get_property = hdy_switcher_button_get_property;
+  object_class->set_property = hdy_switcher_button_set_property;
+
+  /**
+   * HdySwitcherButton:icon-size:
+   *
+   * Use the "icon-size" property to change the size of the image
+   *
+   * Since: 0.0.8
+   */
+  g_object_class_install_property (object_class,
+                                   BTN_PROP_ICON_SIZE,
+                                   g_param_spec_int ("icon-size",
+                                                     _("Icon Size"),
+                                                     _("Symbolic size to use for named icon"),
+                                                     0, G_MAXINT,
+                                                     GTK_ICON_SIZE_BUTTON,
+                                                     G_PARAM_EXPLICIT_NOTIFY |
+                                                     G_PARAM_READWRITE |
+                                                     G_PARAM_STATIC_STRINGS));
+
+  /**
+   * HdySwitcherButton:icon-name:
+   *
+   * Use the "icon-name" property to change the icon displayed
+   *
+   * Since: 0.0.8
+   */
+  g_object_class_install_property (object_class,
+                                   BTN_PROP_ICON_NAME,
+                                   g_param_spec_string ("icon-name",
+                                                        _("Icon Name"),
+                                                        _("Icon name for image"),
+                                                        "text-x-generic-symbolic",
+                                                        G_PARAM_EXPLICIT_NOTIFY |
+                                                        G_PARAM_READWRITE |
+                                                        G_PARAM_STATIC_STRINGS));
+
+  /**
+   * HdySwitcherButton:needs-attention:
+   *
+   * Hint the page needs attention
+   *
+   * Since: 0.0.8
+   */
+  g_object_class_install_property (object_class,
+                                   BTN_PROP_NEEDS_ATTENTION,
+                                   g_param_spec_boolean ("needs-attention",
+                                                         _("Needs Attention"),
+                                                         _("Hint the child needs attention"),
+                                                         FALSE,
+                                                         G_PARAM_EXPLICIT_NOTIFY |
+                                                         G_PARAM_READWRITE |
+                                                         G_PARAM_STATIC_STRINGS));
+
+  g_object_class_override_property (object_class,
+                                    BTN_PROP_LABEL,
+                                    "label");
+
+  g_object_class_override_property (object_class,
+                                    BTN_PROP_ORIENTATION,
+                                    "orientation");
+
+  gtk_widget_class_set_css_name (widget_class, "hdyswitcherbutton");
+}
+
 /**
  * SECTION:hdy-switcher
  * @short_description: An adaptive switcher
@@ -53,7 +252,7 @@ hdy_switcher_init (HdySwitcher *switcher)
 
   priv = hdy_switcher_get_instance_private (switcher);
 
-  priv->icon_size = GTK_ICON_SIZE_MENU;
+  priv->icon_size = GTK_ICON_SIZE_BUTTON;
   priv->stack = NULL;
   priv->buttons = g_hash_table_new (g_direct_hash, g_direct_equal);
 
@@ -84,71 +283,25 @@ on_button_clicked (GtkWidget        *widget,
 }
 
 static void
-rebuild_child (GtkWidget   *self,
-               const gchar *icon_name,
-               const gchar *title,
-               gint         icon_size)
-{
-  GtkStyleContext *context;
-  GtkWidget *button_child;
-
-  button_child = gtk_bin_get_child (GTK_BIN (self));
-  if (button_child != NULL)
-    gtk_widget_destroy (button_child);
-
-  button_child = NULL;
-  context = gtk_widget_get_style_context (GTK_WIDGET (self));
-
-  if (icon_name != NULL)
-    {
-      button_child = gtk_image_new_from_icon_name (icon_name, icon_size);
-      if (title != NULL)
-        gtk_widget_set_tooltip_text (GTK_WIDGET (self), title);
-
-      gtk_style_context_remove_class (context, "text-button");
-      gtk_style_context_add_class (context, "image-button");
-    }
-  else if (title != NULL)
-    {
-      button_child = gtk_label_new (title);
-
-      gtk_widget_set_tooltip_text (GTK_WIDGET (self), NULL);
-
-      gtk_style_context_remove_class (context, "image-button");
-      gtk_style_context_add_class (context, "text-button");
-    }
-
-  if (button_child)
-    {
-      gtk_widget_set_halign (GTK_WIDGET (button_child), GTK_ALIGN_CENTER);
-      gtk_widget_show_all (button_child);
-      gtk_container_add (GTK_CONTAINER (self), button_child);
-    }
-}
-
-static void
 update_needs_attention (GtkWidget *widget, GtkWidget *button, gpointer data)
 {
   GtkContainer *container;
   gboolean needs_attention;
-  GtkStyleContext *context;
 
   container = GTK_CONTAINER (data);
   gtk_container_child_get (container, widget,
                            "needs-attention", &needs_attention,
                            NULL);
 
-  context = gtk_widget_get_style_context (button);
-  if (needs_attention)
-    gtk_style_context_add_class (context, GTK_STYLE_CLASS_NEEDS_ATTENTION);
-  else
-    gtk_style_context_remove_class (context, GTK_STYLE_CLASS_NEEDS_ATTENTION);
+  g_object_set (G_OBJECT (button),
+                "needs-attention", needs_attention,
+                NULL);
 }
 
 static void
 update_button (HdySwitcher *self,
-               GtkWidget        *widget,
-               GtkWidget        *button)
+               GtkWidget   *widget,
+               GtkWidget   *button)
 {
   gchar *title;
   gchar *icon_name;
@@ -161,7 +314,11 @@ update_button (HdySwitcher *self,
                            "icon-name", &icon_name,
                            NULL);
 
-  rebuild_child (button, icon_name, title, priv->icon_size);
+  g_object_set (G_OBJECT (button),
+                "icon-name", icon_name,
+                "icon-size", priv->icon_size,
+                "label", title,
+                NULL);
 
   gtk_widget_set_visible (button, gtk_widget_get_visible (widget) && (title != NULL || icon_name != NULL));
 
@@ -325,10 +482,7 @@ add_child (GtkWidget        *widget,
 
   priv = hdy_switcher_get_instance_private (self);
 
-  button = gtk_radio_button_new (NULL);
-
-  gtk_widget_set_focus_on_click (button, FALSE);
-  gtk_toggle_button_set_mode (GTK_TOGGLE_BUTTON (button), FALSE);
+  button = g_object_new (HDY_TYPE_SWITCHER_BUTTON, NULL);
 
   update_button (self, widget, button);
 
@@ -528,7 +682,7 @@ hdy_switcher_get_stack (HdySwitcher *switcher)
 
 void
 hdy_switcher_set_icon_size (HdySwitcher *switcher,
-                                  gint              icon_size)
+                            gint         icon_size)
 {
   HdySwitcherPrivate *priv;
 
@@ -652,7 +806,7 @@ hdy_switcher_class_init (HdySwitcherClass *class)
                                                      _("Icon Size"),
                                                      _("Symbolic size to use for named icon"),
                                                      0, G_MAXINT,
-                                                     GTK_ICON_SIZE_MENU,
+                                                     GTK_ICON_SIZE_BUTTON,
                                                      G_PARAM_EXPLICIT_NOTIFY |
                                                      G_PARAM_READWRITE |
                                                      G_PARAM_STATIC_STRINGS));

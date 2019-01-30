@@ -14,6 +14,14 @@
 
 G_BEGIN_DECLS
 
+#define HDY_TYPE_SWITCHER_BUTTON (hdy_switcher_button_get_type())
+
+struct _HdySwitcherButtonClass {
+  GtkRadioButtonClass parent_class;
+};
+
+G_DECLARE_DERIVABLE_TYPE (HdySwitcherButton, hdy_switcher_button, HDY, SWITCHER_BUTTON, GtkRadioButton)
+
 #define HDY_TYPE_SWITCHER (hdy_switcher_get_type())
 
 struct _HdySwitcherClass {
