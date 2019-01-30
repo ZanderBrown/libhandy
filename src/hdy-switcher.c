@@ -108,7 +108,6 @@ hdy_switcher_button_set_property (GObject      *object,
 
   switch (prop_id) {
     case BTN_PROP_ICON_SIZE:
-      g_message ("is: %s %i", G_VALUE_TYPE_NAME(value), g_value_get_int(value));
       g_object_set_property (G_OBJECT (priv->image), "icon-size", value);
       break;
 
@@ -231,39 +230,37 @@ typedef struct {
   gboolean in_child_changed;
   GtkWidget *switch_button;
   guint switch_timer;
+  GtkOrientation orientation;
 } HdySwitcherPrivate;
 
 enum {
   PROP_0,
   PROP_ICON_SIZE,
-  PROP_STACK
+  PROP_STACK,
+  PROP_ORIENTATION
 };
 
 G_DEFINE_TYPE_WITH_CODE (HdySwitcher, hdy_switcher, GTK_TYPE_BOX,
                          G_ADD_PRIVATE (HdySwitcher))
 
 static void
-hdy_switcher_init (HdySwitcher *switcher)
+hdy_switcher_init (HdySwitcher *self)
 {
-  GtkStyleContext *context;
   HdySwitcherPrivate *priv;
 
-  gtk_widget_set_has_window (GTK_WIDGET (switcher), FALSE);
+  gtk_widget_set_has_window (GTK_WIDGET (self), FALSE);
 
-  priv = hdy_switcher_get_instance_private (switcher);
+  priv = hdy_switcher_get_instance_private (self);
 
+  priv->orientation = GTK_ORIENTATION_HORIZONTAL;
   priv->icon_size = GTK_ICON_SIZE_BUTTON;
   priv->stack = NULL;
   priv->buttons = g_hash_table_new (g_direct_hash, g_direct_equal);
 
-  context = gtk_widget_get_style_context (GTK_WIDGET (switcher));
-  gtk_style_context_add_class (context, "stack-switcher");
-  gtk_style_context_add_class (context, GTK_STYLE_CLASS_LINKED);
+  gtk_widget_set_valign (GTK_WIDGET (self), GTK_ALIGN_FILL);
 
-  gtk_orientable_set_orientation (GTK_ORIENTABLE (switcher), GTK_ORIENTATION_HORIZONTAL);
-
-  gtk_drag_dest_set (GTK_WIDGET (switcher), 0, NULL, 0, 0);
-  gtk_drag_dest_set_track_motion (GTK_WIDGET (switcher), TRUE);
+  gtk_drag_dest_set (GTK_WIDGET (self), 0, NULL, 0, 0);
+  gtk_drag_dest_set_track_motion (GTK_WIDGET (self), TRUE);
 }
 
 static void
@@ -483,6 +480,8 @@ add_child (GtkWidget        *widget,
   priv = hdy_switcher_get_instance_private (self);
 
   button = g_object_new (HDY_TYPE_SWITCHER_BUTTON, NULL);
+  g_object_bind_property (self, "orientation", button, "orientation", G_BINDING_SYNC_CREATE);
+  g_object_bind_property (self, "icon-size", button, "icon-size", G_BINDING_SYNC_CREATE);
 
   update_button (self, widget, button);
 
@@ -681,27 +680,47 @@ hdy_switcher_get_stack (HdySwitcher *switcher)
 }
 
 void
-hdy_switcher_set_icon_size (HdySwitcher *switcher,
+hdy_switcher_set_icon_size (HdySwitcher *self,
                             gint         icon_size)
 {
   HdySwitcherPrivate *priv;
 
-  g_return_if_fail (HDY_IS_SWITCHER (switcher));
+  g_return_if_fail (HDY_IS_SWITCHER (self));
 
-  priv = hdy_switcher_get_instance_private (switcher);
+  priv = hdy_switcher_get_instance_private (self);
 
-  if (icon_size != priv->icon_size)
-    {
-      priv->icon_size = icon_size;
+  if (icon_size != priv->icon_size) {
+    priv->icon_size = icon_size;
 
-      if (priv->stack != NULL)
-        {
-          clear_switcher (switcher);
-          populate_switcher (switcher);
-        }
+    g_object_notify (G_OBJECT (self), "icon-size");
+  }
+}
 
-      g_object_notify (G_OBJECT (switcher), "icon-size");
+static void
+hdy_switcher_set_orientation (HdySwitcher    *self,
+                              GtkOrientation  orientation)
+{
+  HdySwitcherPrivate *priv;
+  GtkStyleContext *context;
+
+  g_return_if_fail (HDY_IS_SWITCHER (self));
+
+  priv = hdy_switcher_get_instance_private (self);
+  context = gtk_widget_get_style_context (GTK_WIDGET (self));
+
+  if (orientation != priv->orientation) {
+    priv->orientation = orientation;
+
+    if (orientation == GTK_ORIENTATION_HORIZONTAL) {
+      gtk_style_context_add_class (context, "horizontal");
+      gtk_style_context_remove_class (context, "vertical");
+    } else {
+      gtk_style_context_add_class (context, "vertical");
+      gtk_style_context_remove_class (context, "horizontal");
     }
+
+    g_object_notify (G_OBJECT (self), "orientation");
+  }
 }
 
 static void
@@ -722,6 +741,10 @@ hdy_switcher_get_property (GObject      *object,
 
     case PROP_STACK:
       g_value_set_object (value, priv->stack);
+      break;
+
+    case PROP_ORIENTATION:
+      g_value_set_enum (value, priv->orientation);
       break;
 
     default:
@@ -746,6 +769,10 @@ hdy_switcher_set_property (GObject      *object,
 
     case PROP_STACK:
       hdy_switcher_set_stack (switcher, g_value_get_object (value));
+      break;
+
+    case PROP_ORIENTATION:
+      hdy_switcher_set_orientation (switcher, g_value_get_enum (value));
       break;
 
     default:
@@ -783,6 +810,7 @@ hdy_switcher_class_init (HdySwitcherClass *class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (class);
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (class);
+  GtkCssProvider *provider;
 
   object_class->get_property = hdy_switcher_get_property;
   object_class->set_property = hdy_switcher_set_property;
@@ -821,7 +849,18 @@ hdy_switcher_class_init (HdySwitcherClass *class)
                                                         G_PARAM_CONSTRUCT |
                                                         G_PARAM_STATIC_STRINGS));
 
+  g_object_class_override_property (object_class,
+                                    PROP_ORIENTATION,
+                                    "orientation");
+
   gtk_widget_class_set_css_name (widget_class, "hdyswitcher");
+
+  provider = gtk_css_provider_new ();
+  gtk_css_provider_load_from_resource (provider, "/sm/puri/handy/styles/hdy-switcher.css");
+  gtk_style_context_add_provider_for_screen (gdk_screen_get_default (),
+                                             GTK_STYLE_PROVIDER (provider),
+                                             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+  g_object_unref (provider);
 }
 
 /**
