@@ -15,11 +15,11 @@
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Page 1</property>
+            <property name="label" translatable="yes">World</property>
           </object>
           <packing>
             <property name="name">page1</property>
-            <property name="title" translatable="yes">Page 1</property>
+            <property name="title" translatable="yes">World</property>
             <property name="icon_name">help-about-symbolic</property>
           </packing>
         </child>
@@ -27,12 +27,12 @@
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Page 2</property>
+            <property name="label" translatable="yes">Alarm</property>
           </object>
           <packing>
             <property name="name">page2</property>
-            <property name="title" translatable="yes">Page 2</property>
-            <property name="icon_name">edit-find-replace-symbolic</property>
+            <property name="title" translatable="yes">Alarm</property>
+            <property name="icon_name">alarm-symbolic</property>
             <property name="position">1</property>
             <property name="needs_attention">True</property>
           </packing>
@@ -41,13 +41,26 @@
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Page 3</property>
+            <property name="label" translatable="yes">Stopwatch</property>
           </object>
           <packing>
             <property name="name">page3</property>
-            <property name="title" translatable="yes">Page 3</property>
+            <property name="title" translatable="yes">Stopwatch</property>
             <property name="icon_name">document-print-symbolic</property>
             <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Timer</property>
+          </object>
+          <packing>
+            <property name="name">page0</property>
+            <property name="title" translatable="yes">Timer</property>
+            <property name="icon_name">weather-clear-symbolic</property>
+            <property name="position">3</property>
           </packing>
         </child>
       </object>

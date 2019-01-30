@@ -1,7 +1,7 @@
 /*
  * Copyright © 2019 Zander Brown <zbrown@gnome.org>
  * 
- * Based on HdySwitcher.c, Copyright (c) 2013 Red Hat, Inc.
+ * Based on gtkstackswitcher.c, Copyright (c) 2013 Red Hat, Inc.
  * https://gitlab.gnome.org/GNOME/gtk/blob/a0129f556b1fd655215165739d0277d7f7a2c1a8/gtk/gtkstackswitcher.c
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -46,10 +46,21 @@
  * Since: 0.0.8
  */
 
+
+#define VERTICAL_SPACING 4
+#define HORIZONTAL_SPACING 8
+
 typedef struct {
   GtkWidget *wrap;
-  GtkWidget *image;
-  GtkWidget *label;
+
+  GtkWidget *v_wrap;
+  GtkWidget *v_image;
+  GtkWidget *v_label;
+
+  GtkWidget *h_wrap;
+  GtkWidget *h_image;
+  GtkWidget *h_label;
+
   GtkWidget *stack_child;
 } HdySwitcherButtonPrivate;
 
@@ -74,19 +85,41 @@ hdy_switcher_button_init (HdySwitcherButton *self)
 
   priv = hdy_switcher_button_get_instance_private (self);
 
-  priv->wrap = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 8);
+  priv->wrap = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+  gtk_widget_set_halign (priv->wrap, GTK_ALIGN_CENTER);
+  gtk_widget_set_valign (priv->wrap, GTK_ALIGN_CENTER);
+  gtk_widget_set_hexpand (priv->wrap, FALSE);
+  gtk_widget_set_vexpand (priv->wrap, FALSE);
   gtk_widget_show (priv->wrap);
   gtk_container_add (GTK_CONTAINER (self), priv->wrap);
 
-  priv->image = g_object_new (GTK_TYPE_IMAGE,
+  priv->h_wrap = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, HORIZONTAL_SPACING);
+  gtk_widget_set_visible (priv->h_wrap, TRUE);
+  gtk_container_add (GTK_CONTAINER (priv->wrap), priv->h_wrap);
+
+  priv->h_image = g_object_new (GTK_TYPE_IMAGE,
                               "icon-size", GTK_ICON_SIZE_BUTTON,
                               NULL);
-  gtk_widget_show (priv->image);
-  gtk_container_add (GTK_CONTAINER (priv->wrap), priv->image);
+  gtk_widget_show (priv->h_image);
+  gtk_container_add (GTK_CONTAINER (priv->h_wrap), priv->h_image);
 
-  priv->label = gtk_label_new (NULL);
-  gtk_widget_show (priv->label);
-  gtk_container_add (GTK_CONTAINER (priv->wrap), priv->label);
+  priv->h_label = gtk_label_new (NULL);
+  gtk_widget_show (priv->h_label);
+  gtk_container_add (GTK_CONTAINER (priv->h_wrap), priv->h_label);
+
+  priv->v_wrap = gtk_box_new (GTK_ORIENTATION_VERTICAL, VERTICAL_SPACING);
+  gtk_widget_set_visible (priv->v_wrap, FALSE);
+  gtk_container_add (GTK_CONTAINER (priv->wrap), priv->v_wrap);
+
+  priv->v_image = g_object_new (GTK_TYPE_IMAGE,
+                              "icon-size", GTK_ICON_SIZE_BUTTON,
+                              NULL);
+  gtk_widget_show (priv->v_image);
+  gtk_container_add (GTK_CONTAINER (priv->v_wrap), priv->v_image);
+
+  priv->v_label = gtk_label_new (NULL);
+  gtk_widget_show (priv->v_label);
+  gtk_container_add (GTK_CONTAINER (priv->v_wrap), priv->v_label);
 
   gtk_widget_set_focus_on_click (GTK_WIDGET (self), FALSE);
   gtk_toggle_button_set_mode (GTK_TOGGLE_BUTTON (self), FALSE);
@@ -105,22 +138,22 @@ hdy_switcher_button_get_property (GObject      *object,
 
   switch (prop_id) {
     case BTN_PROP_ICON_SIZE:
-      g_object_get_property (G_OBJECT (priv->image), "icon-size", value);
+      g_object_get_property (G_OBJECT (priv->h_image), "icon-size", value);
       break;
 
     case BTN_PROP_ICON_NAME:
-      g_object_get_property (G_OBJECT (priv->image), "icon-name", value);
+      g_object_get_property (G_OBJECT (priv->h_image), "icon-name", value);
       break;
 
     case BTN_PROP_NEEDS_ATTENTION:
-      context = gtk_widget_get_style_context (GTK_WIDGET (priv->label));
+      context = gtk_widget_get_style_context (GTK_WIDGET (self));
       g_value_set_boolean (value,
                            gtk_style_context_has_class (context,
                                                         GTK_STYLE_CLASS_NEEDS_ATTENTION));
       break;
 
     case BTN_PROP_LABEL:
-      g_object_get_property (G_OBJECT (priv->label), "label", value);
+      g_object_get_property (G_OBJECT (priv->h_label), "label", value);
       break;
 
     case BTN_PROP_STACK_CHILD:
@@ -128,7 +161,8 @@ hdy_switcher_button_get_property (GObject      *object,
       break;
 
     case BTN_PROP_ORIENTATION:
-      g_object_get_property (G_OBJECT (priv->wrap), "orientation", value);
+      /*g_object_get_property (G_OBJECT (priv->wrap), "orientation", value);*/
+
       break;
 
     default:
@@ -149,23 +183,27 @@ hdy_switcher_button_set_property (GObject      *object,
 
   switch (prop_id) {
     case BTN_PROP_ICON_SIZE:
-      g_object_set_property (G_OBJECT (priv->image), "icon-size", value);
+      g_object_set_property (G_OBJECT (priv->h_image), "icon-size", value);
+      g_object_set_property (G_OBJECT (priv->v_image), "icon-size", value);
       break;
 
     case BTN_PROP_ICON_NAME:
-      g_object_set_property (G_OBJECT (priv->image), "icon-name", value);
+      g_object_set_property (G_OBJECT (priv->h_image), "icon-name", value);
+      g_object_set_property (G_OBJECT (priv->v_image), "icon-name", value);
       break;
 
     case BTN_PROP_NEEDS_ATTENTION:
-      context = gtk_widget_get_style_context (GTK_WIDGET (priv->label));
-      if (g_value_get_boolean (value))
+      context = gtk_widget_get_style_context (GTK_WIDGET (self));
+      if (g_value_get_boolean (value)) {
         gtk_style_context_add_class (context, GTK_STYLE_CLASS_NEEDS_ATTENTION);
-      else
+      } else {
         gtk_style_context_remove_class (context, GTK_STYLE_CLASS_NEEDS_ATTENTION);
+      }
       break;
 
     case BTN_PROP_LABEL:
-      g_object_set_property (G_OBJECT (priv->label), "label", value);
+      g_object_set_property (G_OBJECT (priv->h_label), "label", value);
+      g_object_set_property (G_OBJECT (priv->v_label), "label", value);
       break;
 
     case BTN_PROP_STACK_CHILD:
@@ -173,7 +211,14 @@ hdy_switcher_button_set_property (GObject      *object,
       break;
 
     case BTN_PROP_ORIENTATION:
-      g_object_set_property (G_OBJECT (priv->wrap), "orientation", value);
+      g_object_set_property (G_OBJECT (priv->h_wrap), "orientation", value);
+      if (g_value_get_enum (value) == GTK_ORIENTATION_HORIZONTAL) {
+        gtk_widget_set_visible (priv->v_wrap, FALSE);
+        gtk_widget_set_visible (priv->h_wrap, TRUE);
+      } else {
+        gtk_widget_set_visible (priv->h_wrap, FALSE);
+        gtk_widget_set_visible (priv->v_wrap, TRUE);
+      }
       break;
 
     default:
@@ -196,7 +241,7 @@ hdy_switcher_button_class_init (HdySwitcherButtonClass *klass)
    *
    * Use the "icon-size" property to change the size of the image in the #HdySwitcherButton
    *
-   * *Note:* This is controlled via #GtkStack
+   * Note: This is controlled via #GtkStack
    * 
    * Since: 0.0.8
    */
@@ -216,7 +261,7 @@ hdy_switcher_button_class_init (HdySwitcherButtonClass *klass)
    *
    * Use the "icon-name" property to change the icon displayed in the #HdySwitcherButton
    * 
-   * *Note:* This is controlled via #GtkStack
+   * Note: This is controlled via #GtkStack
    *
    * Since: 0.0.8
    */
@@ -235,7 +280,7 @@ hdy_switcher_button_class_init (HdySwitcherButtonClass *klass)
    *
    * Show a hint on the #HdySwitcherButton that a page wants attention
    *
-   * *Note:* This is controlled via #GtkStack
+   * Note: This is controlled via #GtkStack
    * 
    * Since: 0.0.8
    */
@@ -258,20 +303,20 @@ hdy_switcher_button_class_init (HdySwitcherButtonClass *klass)
    *
    * The page represented by this button
    *
-   * *Note:* This is controlled via #HdySwitcher
+   * Note: This is controlled via #HdySwitcher
    * 
    * Since: 0.0.8
    */
   g_object_class_install_property (object_class,
                                    BTN_PROP_STACK_CHILD,
                                    g_param_spec_object ("stack-child",
-                                                         _("Stack Child"),
-                                                         _("Page represented by button"),
-                                                         GTK_TYPE_WIDGET,
-                                                         G_PARAM_EXPLICIT_NOTIFY |
-                                                         G_PARAM_READWRITE |
-                                                         G_PARAM_CONSTRUCT_ONLY |
-                                                         G_PARAM_STATIC_STRINGS));
+                                                        _("Stack Child"),
+                                                        _("Page represented by button"),
+                                                        GTK_TYPE_WIDGET,
+                                                        G_PARAM_EXPLICIT_NOTIFY |
+                                                        G_PARAM_READWRITE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_STRINGS));
 
   g_object_class_override_property (object_class,
                                     BTN_PROP_ORIENTATION,
@@ -331,6 +376,7 @@ hdy_switcher_init (HdySwitcher *self)
   priv->buttons = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   gtk_widget_set_valign (GTK_WIDGET (self), GTK_ALIGN_FILL);
+  gtk_box_set_homogeneous (GTK_BOX (self), TRUE);
 
   gtk_drag_dest_set (GTK_WIDGET (self), 0, NULL, 0, 0);
   gtk_drag_dest_set_track_motion (GTK_WIDGET (self), TRUE);
