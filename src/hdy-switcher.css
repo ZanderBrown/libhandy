@@ -1,14 +1,14 @@
 hdyswitcher > button {
     margin-top: 0;
     margin-bottom: 0;
-    padding: 8px 12px;
+    padding: 0;
     border-radius: 0;
     border-color: transparent;
     border-width: 0 1px;
     background: transparent;
     box-shadow: none;
     font-size: 1rem;
-    min-height: 38px;
+    min-height: 46px;
 }
 
 hdyswitcher > button:hover:not(:checked) {
@@ -24,4 +24,9 @@ hdyswitcher > button:checked {
 
 hdyswitcher > button .narrow {
     font-size: 0.75rem;
+    padding: 4px 6px;
+}
+
+hdyswitcher > button .wide {
+    padding: 8px 12px;
 }

@@ -88,16 +88,17 @@ hdy_switcher_button_init (HdySwitcherButton *self)
 
   priv = hdy_switcher_button_get_instance_private (self);
 
-  priv->wrap = gtk_stack_new ();
-  gtk_stack_set_transition_type (GTK_STACK (priv->wrap), GTK_STACK_TRANSITION_TYPE_CROSSFADE);
-  gtk_widget_set_halign (priv->wrap, GTK_ALIGN_CENTER);
-  gtk_widget_set_valign (priv->wrap, GTK_ALIGN_CENTER);
-  gtk_widget_set_hexpand (priv->wrap, FALSE);
-  gtk_widget_set_vexpand (priv->wrap, FALSE);
+  priv->wrap = g_object_new (GTK_TYPE_STACK,
+                             "transition-type", GTK_STACK_TRANSITION_TYPE_CROSSFADE,
+                             "homogeneous", FALSE,
+                             "vhomogeneous", TRUE,
+                             NULL);
   gtk_widget_show (priv->wrap);
   gtk_container_add (GTK_CONTAINER (self), priv->wrap);
 
   priv->h_wrap = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, HORIZONTAL_SPACING);
+  gtk_widget_set_halign (priv->h_wrap, GTK_ALIGN_CENTER);
+  gtk_widget_set_valign (priv->h_wrap, GTK_ALIGN_CENTER);
   context = gtk_widget_get_style_context (priv->h_wrap);
   gtk_style_context_add_class (context, "wide");
   gtk_widget_show (priv->h_wrap);
@@ -114,6 +115,8 @@ hdy_switcher_button_init (HdySwitcherButton *self)
   gtk_container_add (GTK_CONTAINER (priv->h_wrap), priv->h_label);
 
   priv->v_wrap = gtk_box_new (GTK_ORIENTATION_VERTICAL, VERTICAL_SPACING);
+  gtk_widget_set_halign (priv->v_wrap, GTK_ALIGN_CENTER);
+  gtk_widget_set_valign (priv->v_wrap, GTK_ALIGN_CENTER);
   context = gtk_widget_get_style_context (priv->v_wrap);
   gtk_style_context_add_class (context, "narrow");
   gtk_widget_show (priv->v_wrap);
@@ -1019,8 +1022,6 @@ hdy_switcher_get_preferred_width (GtkWidget *widget,
     count++;
   }
 
-  g_message ("%i items between %i and %i", count, widest_v, widest_h);
-
   *min = widest_v * count;
   *nat = widest_h * count;
 }
@@ -1042,8 +1043,6 @@ is_narrow (HdySwitcher *self,
     count++;
   }
 
-  g_message ("is_narrow %i items for %i space thus %i each vs %i (%i)", count, width, width / count, widest_h, (widest_h * count) > width);
-
   return (widest_h * count) > width;
 }
 
@@ -1053,10 +1052,8 @@ hdy_switcher_size_allocate (GtkWidget        *widget,
 {
   if (is_narrow (HDY_SWITCHER (widget), allocation->width)) {
     gtk_orientable_set_orientation (GTK_ORIENTABLE (widget), GTK_ORIENTATION_VERTICAL);
-    g_message ("alloced vertical %ix%i", allocation->width, allocation->height);
   } else {
     gtk_orientable_set_orientation (GTK_ORIENTABLE (widget), GTK_ORIENTATION_HORIZONTAL);
-    g_message ("alloced horizontal %ix%i", allocation->width, allocation->height);
   }
 
   GTK_WIDGET_CLASS (hdy_switcher_parent_class)->size_allocate (widget, allocation);
