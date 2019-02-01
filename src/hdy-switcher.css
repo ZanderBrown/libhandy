@@ -1,25 +1,31 @@
-hdyswitcher > button {
-    margin-top: 0;
-    margin-bottom: 0;
+hdyswitcher {
+    margin: 0;
     padding: 0;
-    border-radius: 0;
-    border-color: transparent;
-    border-width: 0 1px;
-    background: transparent;
-    box-shadow: none;
-    font-size: 1rem;
     min-height: 46px;
 }
 
+hdyswitcher > button {
+    padding: 0;
+    margin: 0;
+    border-radius: 0;
+    border-top: 0;
+    border-bottom: 0;
+    box-shadow: none;
+    font-size: 1rem;
+}
+
+hdyswitcher > button:not(:checked) {
+    background: transparent;
+    border-left-color: transparent;
+    border-right-color: transparent;
+}
+
 hdyswitcher > button:hover:not(:checked) {
-    background: lighter(@theme_bg_color);
+    background: darker(@theme_base_color);
 }
 
 hdyswitcher > button:checked {
     font-weight: bold;
-    border-left-color: @borders;
-    border-right-color: @borders;
-    background: darker(@theme_bg_color);
 }
 
 hdyswitcher > button .narrow {
