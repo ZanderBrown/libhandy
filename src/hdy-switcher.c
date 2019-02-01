@@ -51,17 +51,19 @@
 #define HORIZONTAL_SPACING 8
 
 typedef struct {
-  GtkWidget *wrap;
+  GtkWidget      *wrap;
+  GtkIconSize     icon_size;
+  GtkOrientation  orientation;
 
-  GtkWidget *v_wrap;
-  GtkWidget *v_image;
-  GtkWidget *v_label;
+  GtkWidget      *v_wrap;
+  GtkWidget      *v_image;
+  GtkWidget      *v_label;
 
-  GtkWidget *h_wrap;
-  GtkWidget *h_image;
-  GtkWidget *h_label;
+  GtkWidget      *h_wrap;
+  GtkWidget      *h_image;
+  GtkWidget      *h_label;
 
-  GtkWidget *stack_child;
+  GtkWidget      *stack_child;
 } HdySwitcherButtonPrivate;
 
 enum {
@@ -82,10 +84,12 @@ static void
 hdy_switcher_button_init (HdySwitcherButton *self)
 {
   HdySwitcherButtonPrivate *priv;
+  GtkStyleContext *context;
 
   priv = hdy_switcher_button_get_instance_private (self);
 
-  priv->wrap = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+  priv->wrap = gtk_stack_new ();
+  gtk_stack_set_transition_type (GTK_STACK (priv->wrap), GTK_STACK_TRANSITION_TYPE_CROSSFADE);
   gtk_widget_set_halign (priv->wrap, GTK_ALIGN_CENTER);
   gtk_widget_set_valign (priv->wrap, GTK_ALIGN_CENTER);
   gtk_widget_set_hexpand (priv->wrap, FALSE);
@@ -94,12 +98,14 @@ hdy_switcher_button_init (HdySwitcherButton *self)
   gtk_container_add (GTK_CONTAINER (self), priv->wrap);
 
   priv->h_wrap = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, HORIZONTAL_SPACING);
-  gtk_widget_set_visible (priv->h_wrap, TRUE);
-  gtk_container_add (GTK_CONTAINER (priv->wrap), priv->h_wrap);
+  context = gtk_widget_get_style_context (priv->h_wrap);
+  gtk_style_context_add_class (context, "wide");
+  gtk_widget_show (priv->h_wrap);
+  gtk_stack_add_named (GTK_STACK (priv->wrap), priv->h_wrap, "h");
 
-  priv->h_image = g_object_new (GTK_TYPE_IMAGE,
-                              "icon-size", GTK_ICON_SIZE_BUTTON,
-                              NULL);
+  priv->h_image = gtk_image_new ();
+  g_object_bind_property (self, "icon-size", priv->h_image, "icon-size", G_BINDING_SYNC_CREATE);
+  g_object_bind_property (self, "icon-name", priv->h_image, "icon-name", G_BINDING_SYNC_CREATE);
   gtk_widget_show (priv->h_image);
   gtk_container_add (GTK_CONTAINER (priv->h_wrap), priv->h_image);
 
@@ -108,18 +114,22 @@ hdy_switcher_button_init (HdySwitcherButton *self)
   gtk_container_add (GTK_CONTAINER (priv->h_wrap), priv->h_label);
 
   priv->v_wrap = gtk_box_new (GTK_ORIENTATION_VERTICAL, VERTICAL_SPACING);
-  gtk_widget_set_visible (priv->v_wrap, FALSE);
-  gtk_container_add (GTK_CONTAINER (priv->wrap), priv->v_wrap);
+  context = gtk_widget_get_style_context (priv->v_wrap);
+  gtk_style_context_add_class (context, "narrow");
+  gtk_widget_show (priv->v_wrap);
+  gtk_stack_add_named (GTK_STACK (priv->wrap), priv->v_wrap, "v");
 
-  priv->v_image = g_object_new (GTK_TYPE_IMAGE,
-                              "icon-size", GTK_ICON_SIZE_BUTTON,
-                              NULL);
+  priv->v_image = gtk_image_new ();
+  g_object_bind_property (self, "icon-size", priv->v_image, "icon-size", G_BINDING_SYNC_CREATE);
+  g_object_bind_property (self, "icon-name", priv->v_image, "icon-name", G_BINDING_SYNC_CREATE);
   gtk_widget_show (priv->v_image);
   gtk_container_add (GTK_CONTAINER (priv->v_wrap), priv->v_image);
 
   priv->v_label = gtk_label_new (NULL);
   gtk_widget_show (priv->v_label);
   gtk_container_add (GTK_CONTAINER (priv->v_wrap), priv->v_label);
+
+  gtk_stack_set_visible_child (GTK_STACK (priv->wrap), priv->h_wrap);
 
   gtk_widget_set_focus_on_click (GTK_WIDGET (self), FALSE);
   gtk_toggle_button_set_mode (GTK_TOGGLE_BUTTON (self), FALSE);
@@ -138,7 +148,7 @@ hdy_switcher_button_get_property (GObject      *object,
 
   switch (prop_id) {
     case BTN_PROP_ICON_SIZE:
-      g_object_get_property (G_OBJECT (priv->h_image), "icon-size", value);
+      g_value_set_int (value, priv->icon_size);
       break;
 
     case BTN_PROP_ICON_NAME:
@@ -161,8 +171,7 @@ hdy_switcher_button_get_property (GObject      *object,
       break;
 
     case BTN_PROP_ORIENTATION:
-      /*g_object_get_property (G_OBJECT (priv->wrap), "orientation", value);*/
-
+      g_value_set_enum (value, priv->orientation);
       break;
 
     default:
@@ -183,8 +192,7 @@ hdy_switcher_button_set_property (GObject      *object,
 
   switch (prop_id) {
     case BTN_PROP_ICON_SIZE:
-      g_object_set_property (G_OBJECT (priv->h_image), "icon-size", value);
-      g_object_set_property (G_OBJECT (priv->v_image), "icon-size", value);
+      priv->icon_size = g_value_get_int (value);
       break;
 
     case BTN_PROP_ICON_NAME:
@@ -211,13 +219,11 @@ hdy_switcher_button_set_property (GObject      *object,
       break;
 
     case BTN_PROP_ORIENTATION:
-      g_object_set_property (G_OBJECT (priv->h_wrap), "orientation", value);
-      if (g_value_get_enum (value) == GTK_ORIENTATION_HORIZONTAL) {
-        gtk_widget_set_visible (priv->v_wrap, FALSE);
-        gtk_widget_set_visible (priv->h_wrap, TRUE);
+      priv->orientation = g_value_get_enum (value);
+      if (priv->orientation == GTK_ORIENTATION_HORIZONTAL) {
+        gtk_stack_set_visible_child (GTK_STACK (priv->wrap), priv->h_wrap);
       } else {
-        gtk_widget_set_visible (priv->h_wrap, FALSE);
-        gtk_widget_set_visible (priv->v_wrap, TRUE);
+        gtk_stack_set_visible_child (GTK_STACK (priv->wrap), priv->v_wrap);
       }
       break;
 
@@ -225,6 +231,22 @@ hdy_switcher_button_set_property (GObject      *object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
     }
+}
+
+static void
+hdy_switcher_button_get_size (HdySwitcherButton *self,
+                              gint              *v_min_width,
+                              gint              *h_min_width,
+                              gint              *h_nat_width)
+{
+  HdySwitcherButtonPrivate *priv = hdy_switcher_button_get_instance_private (self);
+
+  if (v_min_width) {
+    gtk_widget_get_preferred_width (priv->v_wrap, v_min_width, NULL);
+  }
+  if (h_min_width || h_nat_width) {
+    gtk_widget_get_preferred_width (priv->h_wrap, h_min_width, h_nat_width);
+  }
 }
 
 static void
@@ -876,7 +898,6 @@ hdy_switcher_set_orientation (HdySwitcher    *self,
                               GtkOrientation  orientation)
 {
   HdySwitcherPrivate *priv;
-  GtkStyleContext *context;
 
   g_return_if_fail (HDY_IS_SWITCHER (self));
 
@@ -887,16 +908,6 @@ hdy_switcher_set_orientation (HdySwitcher    *self,
     return;
 
   priv->orientation = orientation;
-  context = gtk_widget_get_style_context (GTK_WIDGET (self));
-
-  /* Update the css class so we can change text size ext */
-  if (orientation == GTK_ORIENTATION_HORIZONTAL) {
-    gtk_style_context_add_class (context, "horizontal");
-    gtk_style_context_remove_class (context, "vertical");
-  } else {
-    gtk_style_context_add_class (context, "vertical");
-    gtk_style_context_remove_class (context, "horizontal");
-  }
 
   g_object_notify (G_OBJECT (self), "orientation");
 }
@@ -984,6 +995,74 @@ hdy_switcher_finalize (GObject *object)
 }
 
 static void
+hdy_switcher_get_preferred_width (GtkWidget *widget,
+                                  gint      *min,
+                                  gint      *nat)
+{
+  HdySwitcher *self = HDY_SWITCHER (widget);
+  gint widest_v = 0;
+  gint widest_h = 0;
+  gint count = 0;
+
+  for (GList *l = gtk_container_get_children (GTK_CONTAINER (self)); l != NULL; l = g_list_next (l)) {
+    gint v_min = 0;
+    gint h_nat = 0;
+
+    hdy_switcher_button_get_size (HDY_SWITCHER_BUTTON (l->data), &v_min, NULL, &h_nat);
+
+    if (v_min > widest_v)
+      widest_v = v_min;
+    
+    if (h_nat > widest_h)
+      widest_h = h_nat;
+
+    count++;
+  }
+
+  g_message ("%i items between %i and %i", count, widest_v, widest_h);
+
+  *min = widest_v * count;
+  *nat = widest_h * count;
+}
+
+static gint
+is_narrow (HdySwitcher *self,
+           gint         width)
+{
+  gint widest_h = 0;
+  gint count = 0;
+
+  for (GList *l = gtk_container_get_children (GTK_CONTAINER (self)); l != NULL; l = g_list_next (l)) {
+    gint h_min = 0;
+
+    hdy_switcher_button_get_size (HDY_SWITCHER_BUTTON (l->data), NULL, &h_min, NULL);
+    
+    widest_h = MAX (widest_h, h_min);
+
+    count++;
+  }
+
+  g_message ("is_narrow %i items for %i space thus %i each vs %i (%i)", count, width, width / count, widest_h, (widest_h * count) > width);
+
+  return (widest_h * count) > width;
+}
+
+static void
+hdy_switcher_size_allocate (GtkWidget        *widget,
+                                   GtkAllocation    *allocation)
+{
+  if (is_narrow (HDY_SWITCHER (widget), allocation->width)) {
+    gtk_orientable_set_orientation (GTK_ORIENTABLE (widget), GTK_ORIENTATION_VERTICAL);
+    g_message ("alloced vertical %ix%i", allocation->width, allocation->height);
+  } else {
+    gtk_orientable_set_orientation (GTK_ORIENTABLE (widget), GTK_ORIENTATION_HORIZONTAL);
+    g_message ("alloced horizontal %ix%i", allocation->width, allocation->height);
+  }
+
+  GTK_WIDGET_CLASS (hdy_switcher_parent_class)->size_allocate (widget, allocation);
+}
+
+static void
 hdy_switcher_class_init (HdySwitcherClass *class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (class);
@@ -995,6 +1074,8 @@ hdy_switcher_class_init (HdySwitcherClass *class)
   object_class->dispose = hdy_switcher_dispose;
   object_class->finalize = hdy_switcher_finalize;
 
+  widget_class->size_allocate = hdy_switcher_size_allocate;
+  widget_class->get_preferred_width = hdy_switcher_get_preferred_width;
   widget_class->drag_motion = hdy_switcher_drag_motion;
   widget_class->drag_leave = hdy_switcher_drag_leave;
 

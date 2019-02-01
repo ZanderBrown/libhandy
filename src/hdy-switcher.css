@@ -12,7 +12,7 @@ hdyswitcher > button {
 }
 
 hdyswitcher > button:hover:not(:checked) {
-    background-image: none;
+    background: lighter(@theme_bg_color);
 }
 
 hdyswitcher > button:checked {
@@ -22,6 +22,6 @@ hdyswitcher > button:checked {
     background: darker(@theme_bg_color);
 }
 
-hdyswitcher.vertical > button {
+hdyswitcher > button .narrow {
     font-size: 0.75rem;
 }
