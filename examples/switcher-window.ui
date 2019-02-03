@@ -7,60 +7,100 @@
     <property name="can_focus">False</property>
     <property name="modal">True</property>
     <property name="window_position">center-on-parent</property>
+    <property name="title">HdySwitcher Demo</property>
     <child>
-      <object class="GtkStack" id="stack1">
+      <object class="GtkBox">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
         <child>
-          <object class="GtkLabel">
+          <object class="GtkStack" id="stack">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">World</property>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">World</property>
+              </object>
+              <packing>
+                <property name="name">page1</property>
+                <property name="title" translatable="yes">World</property>
+                <property name="icon_name">help-about-symbolic</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Alarm</property>
+              </object>
+              <packing>
+                <property name="name">page2</property>
+                <property name="title" translatable="yes">Alarm</property>
+                <property name="icon_name">alarm-symbolic</property>
+                <property name="position">1</property>
+                <property name="needs_attention">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Stopwatch</property>
+              </object>
+              <packing>
+                <property name="name">page3</property>
+                <property name="title" translatable="yes">Stopwatch</property>
+                <property name="icon_name">document-print-symbolic</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Timer</property>
+              </object>
+              <packing>
+                <property name="name">page0</property>
+                <property name="title" translatable="yes">Timer</property>
+                <property name="icon_name">weather-clear-symbolic</property>
+                <property name="position">3</property>
+              </packing>
+            </child>
           </object>
           <packing>
-            <property name="name">page1</property>
-            <property name="title" translatable="yes">World</property>
-            <property name="icon_name">help-about-symbolic</property>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
           </packing>
         </child>
         <child>
-          <object class="GtkLabel">
+          <object class="GtkActionBar">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Alarm</property>
+            <child>
+              <placeholder/>
+            </child>
+            <child type="center">
+              <object class="HdySwitcherBar" id="secondary">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="stack">stack</property>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <style>
+              <class name="hdy-secondary-switcher"/>
+            </style>
           </object>
           <packing>
-            <property name="name">page2</property>
-            <property name="title" translatable="yes">Alarm</property>
-            <property name="icon_name">alarm-symbolic</property>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
             <property name="position">1</property>
-            <property name="needs_attention">True</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkLabel">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Stopwatch</property>
-          </object>
-          <packing>
-            <property name="name">page3</property>
-            <property name="title" translatable="yes">Stopwatch</property>
-            <property name="icon_name">document-print-symbolic</property>
-            <property name="position">2</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkLabel">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Timer</property>
-          </object>
-          <packing>
-            <property name="name">page0</property>
-            <property name="title" translatable="yes">Timer</property>
-            <property name="icon_name">weather-clear-symbolic</property>
-            <property name="position">3</property>
           </packing>
         </child>
       </object>
@@ -74,10 +114,11 @@
           <placeholder/>
         </child>
         <child type="title">
-          <object class="HdySwitcher">
+          <object class="HdyPrimarySwitcher" id="pswitch">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="stack">stack1</property>
+            <property name="stack">stack</property>
+            <property name="secondary">secondary</property>
           </object>
         </child>
       </object>

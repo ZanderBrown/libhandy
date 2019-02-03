@@ -280,12 +280,17 @@ switcher_demo_clicked_cb (GtkButton     *btn,
                           ExampleWindow *self)
 {
   GtkBuilder *builder;
-  GtkWidget *win;
+  GtkWidget  *win, *pswitch;
 
   builder = gtk_builder_new_from_resource ("/sm/puri/handy/demo/ui/switcher-window.ui");
 
   win = GTK_WIDGET (gtk_builder_get_object (builder, "window"));
+  pswitch = GTK_WIDGET (gtk_builder_get_object (builder, "pswitch"));
+
   gtk_window_set_transient_for (GTK_WINDOW (win), GTK_WINDOW (self));
+
+  g_object_bind_property (win, "title", pswitch, "title", G_BINDING_SYNC_CREATE);
+
 
   gtk_widget_show (win);
 }

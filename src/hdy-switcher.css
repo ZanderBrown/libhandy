@@ -1,7 +1,6 @@
 hdyswitcher {
     margin: 0;
     padding: 0;
-    min-height: 46px;
 }
 
 hdyswitcher > button {
@@ -24,10 +23,6 @@ hdyswitcher > button:hover:not(:checked) {
     background: darker(@theme_base_color);
 }
 
-hdyswitcher > button:checked {
-    font-weight: bold;
-}
-
 hdyswitcher > button .narrow {
     font-size: 0.75rem;
     padding: 4px 6px;
@@ -35,4 +30,12 @@ hdyswitcher > button .narrow {
 
 hdyswitcher > button .wide {
     padding: 8px 12px;
+}
+
+headerbar hdyswitcher {
+    min-height: 46px;
+}
+
+.hdy-secondary-switcher revealer > box {
+    padding: 0;
 }

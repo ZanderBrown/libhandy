@@ -138,7 +138,6 @@ hdy_switcher_button_init (HdySwitcherButton *self)
   gtk_toggle_button_set_mode (GTK_TOGGLE_BUTTON (self), FALSE);
 }
 
-
 static void
 hdy_switcher_button_get_property (GObject      *object,
                                   guint         prop_id,
@@ -363,17 +362,224 @@ hdy_switcher_button_get_stack_child (HdySwitcherButton *self)
   return priv->stack_child;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+G_DEFINE_INTERFACE (HdySwitcher, hdy_switcher, G_TYPE_OBJECT)
+
+static void
+hdy_switcher_default_init (HdySwitcherInterface *iface)
+{
+  /**
+   * HdySwitcher:icon-size:
+   *
+   * Use the "icon-size" property to change the size of the images
+   *
+   * Since: 0.0.8
+   */
+  g_object_interface_install_property (iface,
+                                       g_param_spec_int ("icon-size",
+                                                         _("Icon Size"),
+                                                         _("Symbolic size to use for named icon"),
+                                                         0, G_MAXINT,
+                                                         GTK_ICON_SIZE_BUTTON,
+                                                         G_PARAM_EXPLICIT_NOTIFY |
+                                                         G_PARAM_READWRITE |
+                                                         G_PARAM_STATIC_STRINGS));
+
+  /**
+   * HdySwitcher:stack:
+   *
+   * The #GtkStack the #HdySwitcherBar controls
+   *
+   * Since: 0.0.8
+   */
+  g_object_interface_install_property (iface,
+                                       g_param_spec_object ("stack",
+                                                            _("Stack"),
+                                                            _("Stack"),
+                                                            GTK_TYPE_STACK,
+                                                            G_PARAM_READWRITE |
+                                                            G_PARAM_CONSTRUCT |
+                                                            G_PARAM_STATIC_STRINGS));
+}
+
+/**
+ * hdy_switcher_set_icon_size:
+ * @self: a #HdySwitcher
+ * @icon_size: the new icon size
+ *
+ * Change the icon size of the images used in the #HdySwitcher
+ * 
+ * C Usage
+ * |[<!-- language="C" -->
+ * hdy_switcher_set_icon_size (HDY_SWITCHER_BAR (switcher), GTK_ICON_SIZE_BUTTON);
+ * ]|
+ * 
+ * Vala Usage
+ * |[<!-- language="Vala" -->
+ * switcher.icon_size = Gtk.IconSize.BUTTON;
+ * ]|
+ * 
+ * Python Usage
+ * |[<!-- language="Python" -->
+ * switcher.props.icon_size = Gtk.IconSize.BUTTON
+ * ]|
+ *
+ * Since: 0.0.8
+ */
+void
+hdy_switcher_set_icon_size (HdySwitcher *self,
+                            GtkIconSize  icon_size)
+{
+  g_return_if_fail (HDY_IS_SWITCHER (self));
+
+  g_object_set (self,
+                "icon-size", &icon_size,
+                NULL);
+}
+
+/**
+ * hdy_switcher_get_icon_size:
+ * @self: a #HdySwitcher
+ *
+ * Get the icon size of the images used in the #HdySwitcher
+ * 
+ * See: hdy_switcher_set_icon_size()
+ *
+ * Since: 0.0.8
+ */
+GtkIconSize
+hdy_switcher_get_icon_size (HdySwitcher *self)
+{
+  GtkIconSize size;
+
+  g_return_val_if_fail (HDY_IS_SWITCHER (self), GTK_ICON_SIZE_BUTTON);
+
+  g_object_get (self,
+                "icon-size", &size,
+                NULL);
+
+  return size;
+}
+
+/**
+ * hdy_switcher_set_stack:
+ * @self: a #HdySwitcher
+ * @stack: (allow-none): a #GtkStack
+ *
+ * Sets the #GtkStack to control.
+ *
+ * C Usage
+ * |[<!-- language="C" -->
+ * hdy_switcher_set_stack (HDY_SWITCHER_BAR (switcher), GTK_STACK (stack));
+ * ]|
+ * 
+ * Vala Usage
+ * |[<!-- language="Vala" -->
+ * switcher.stack = stack;
+ * ]|
+ * 
+ * Python Usage
+ * |[<!-- language="Python" -->
+ * switcher.props.stack = stack
+ * ]|
+ * 
+ * Since: 0.0.8
+ */
+void
+hdy_switcher_set_stack (HdySwitcher *self,
+                        GtkStack    *stack)
+{
+  g_return_if_fail (HDY_IS_SWITCHER (self));
+
+  g_object_set (self,
+                "stack", &stack,
+                NULL);
+}
+
+/**
+ * hdy_switcher_get_stack:
+ * @self: a #HdySwitcher
+ *
+ * Get the #GtkStack being controlled by the #HdySwitcher
+ *
+ * See: hdy_switcher_set_stack()
+ * 
+ * Returns: (nullable) (transfer none): the #GtkStack, or %NULL if none has been set
+ *
+ * Since: 0.0.8
+ */
+GtkStack *
+hdy_switcher_get_stack (HdySwitcher *self)
+{
+  GtkStack *stack;
+
+  g_return_val_if_fail (HDY_IS_SWITCHER (self), NULL);
+
+  g_object_get (self,
+                "stack", &stack,
+                NULL);
+
+  return stack;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #define TIMEOUT_EXPAND 500
 
 typedef struct {
-  GtkStack *stack;
-  GHashTable *buttons;
-  gint icon_size;
-  gboolean in_child_changed;
-  GtkWidget *switch_button;
-  guint switch_timer;
-  GtkOrientation orientation;
-} HdySwitcherPrivate;
+  GtkStack       *stack;
+  GHashTable     *buttons;
+  GtkIconSize     icon_size;
+  gboolean        in_child_changed;
+  GtkWidget      *switch_button;
+  guint           switch_timer;
+  GtkOrientation  orientation;
+} HdySwitcherBarPrivate;
 
 enum {
   PROP_0,
@@ -382,17 +588,19 @@ enum {
   PROP_ORIENTATION
 };
 
-G_DEFINE_TYPE_WITH_CODE (HdySwitcher, hdy_switcher, GTK_TYPE_BOX,
-                         G_ADD_PRIVATE (HdySwitcher))
+G_DEFINE_TYPE_WITH_CODE (HdySwitcherBar, hdy_switcher_bar, GTK_TYPE_BOX,
+                         G_ADD_PRIVATE (HdySwitcherBar)
+                         G_IMPLEMENT_INTERFACE (GTK_TYPE_ORIENTABLE, NULL)
+                         G_IMPLEMENT_INTERFACE (HDY_TYPE_SWITCHER, NULL))
 
 static void
-hdy_switcher_init (HdySwitcher *self)
+hdy_switcher_bar_init (HdySwitcherBar *self)
 {
-  HdySwitcherPrivate *priv;
+  HdySwitcherBarPrivate *priv;
 
   gtk_widget_set_has_window (GTK_WIDGET (self), FALSE);
 
-  priv = hdy_switcher_get_instance_private (self);
+  priv = hdy_switcher_bar_get_instance_private (self);
 
   /* Setup our private data */
   priv->orientation = GTK_ORIENTATION_HORIZONTAL;
@@ -409,13 +617,13 @@ hdy_switcher_init (HdySwitcher *self)
 
 /* Switch to a buttons page when it's clicked */
 static void
-on_button_clicked (GtkWidget   *widget,
-                   HdySwitcher *self)
+on_button_clicked (GtkWidget      *widget,
+                   HdySwitcherBar *self)
 {
   GtkWidget *child;
-  HdySwitcherPrivate *priv;
+  HdySwitcherBarPrivate *priv;
 
-  priv = hdy_switcher_get_instance_private (self);
+  priv = hdy_switcher_bar_get_instance_private (self);
 
   if (priv->in_child_changed)
     return;
@@ -426,16 +634,16 @@ on_button_clicked (GtkWidget   *widget,
 
 /* Sync a button to it's page */
 static void
-update_button (HdySwitcher *self,
-               GtkWidget   *widget,
-               GtkWidget   *button)
+update_button (HdySwitcherBar *self,
+               GtkWidget      *widget,
+               GtkWidget      *button)
 {
   gchar *title;
   gchar *icon_name;
   gboolean needs_attention;
-  HdySwitcherPrivate *priv;
+  HdySwitcherBarPrivate *priv;
 
-  priv = hdy_switcher_get_instance_private (self);
+  priv = hdy_switcher_bar_get_instance_private (self);
 
   /* Get properties from the page and set them on the button */
   gtk_container_child_get (GTK_CONTAINER (priv->stack), widget,
@@ -452,7 +660,8 @@ update_button (HdySwitcher *self,
                 NULL);
 
   /* Hide the button if the page is invisible or has neither a title or icon */
-  gtk_widget_set_visible (button, gtk_widget_get_visible (widget) && (title != NULL || icon_name != NULL));
+  gtk_widget_set_visible (button,
+                          gtk_widget_get_visible (widget) && (title != NULL || icon_name != NULL));
 
   g_free (title);
   g_free (icon_name);
@@ -460,14 +669,14 @@ update_button (HdySwitcher *self,
 
 /* The Title/Icon/Visibility of a page changed */
 static void
-on_title_icon_visible_updated (GtkWidget   *widget,
-                               GParamSpec  *pspec,
-                               HdySwitcher *self)
+on_title_icon_visible_updated (GtkWidget      *widget,
+                               GParamSpec     *pspec,
+                               HdySwitcherBar *self)
 {
   GtkWidget *button;
-  HdySwitcherPrivate *priv;
+  HdySwitcherBarPrivate *priv;
 
-  priv = hdy_switcher_get_instance_private (self);
+  priv = hdy_switcher_bar_get_instance_private (self);
 
   /* Update the button */
   button = g_hash_table_lookup (priv->buttons, widget);
@@ -476,15 +685,15 @@ on_title_icon_visible_updated (GtkWidget   *widget,
 
 /* The stack was reordered, reflect this in the buttons */
 static void
-on_position_updated (GtkWidget   *widget,
-                     GParamSpec  *pspec,
-                     HdySwitcher *self)
+on_position_updated (GtkWidget      *widget,
+                     GParamSpec     *pspec,
+                     HdySwitcherBar *self)
 {
   GtkWidget *button;
   gint position;
-  HdySwitcherPrivate *priv;
+  HdySwitcherBarPrivate *priv;
 
-  priv = hdy_switcher_get_instance_private (self);
+  priv = hdy_switcher_bar_get_instance_private (self);
 
   button = g_hash_table_lookup (priv->buttons, widget);
 
@@ -501,12 +710,12 @@ on_position_updated (GtkWidget   *widget,
 static void
 on_needs_attention_updated (GtkWidget        *widget,
                             GParamSpec       *pspec,
-                            HdySwitcher *self)
+                            HdySwitcherBar   *self)
 {
   GtkWidget *button;
-  HdySwitcherPrivate *priv;
+  HdySwitcherBarPrivate *priv;
 
-  priv = hdy_switcher_get_instance_private (self);
+  priv = hdy_switcher_bar_get_instance_private (self);
 
   /* Keep the button in sync */
   button = g_hash_table_lookup (priv->buttons, widget);
@@ -514,11 +723,11 @@ on_needs_attention_updated (GtkWidget        *widget,
 }
 
 static void
-remove_switch_timer (HdySwitcher *self)
+remove_switch_timer (HdySwitcherBar *self)
 {
-  HdySwitcherPrivate *priv;
+  HdySwitcherBarPrivate *priv;
 
-  priv = hdy_switcher_get_instance_private (self);
+  priv = hdy_switcher_bar_get_instance_private (self);
 
   if (priv->switch_timer) {
     g_source_remove (priv->switch_timer);
@@ -529,11 +738,11 @@ remove_switch_timer (HdySwitcher *self)
 static gboolean
 hdy_switcher_switch_timeout (gpointer data)
 {
-  HdySwitcher *self = data;
-  HdySwitcherPrivate *priv;
+  HdySwitcherBar *self = data;
+  HdySwitcherBarPrivate *priv;
   GtkWidget *button;
 
-  priv = hdy_switcher_get_instance_private (self);
+  priv = hdy_switcher_bar_get_instance_private (self);
 
   priv->switch_timer = 0;
 
@@ -547,14 +756,14 @@ hdy_switcher_switch_timeout (gpointer data)
 }
 
 static gboolean
-hdy_switcher_drag_motion (GtkWidget      *widget,
-                          GdkDragContext *context,
-                          gint            x,
-                          gint            y,
-                          guint           time)
+hdy_switcher_bar_drag_motion (GtkWidget      *widget,
+                              GdkDragContext *context,
+                              gint            x,
+                              gint            y,
+                              guint           time)
 {
-  HdySwitcher *self = HDY_SWITCHER (widget);
-  HdySwitcherPrivate *priv;
+  HdySwitcherBar *self = HDY_SWITCHER_BAR (widget);
+  HdySwitcherBarPrivate *priv;
   GtkAllocation allocation;
   GtkWidget *button;
   GHashTableIter iter;
@@ -563,7 +772,7 @@ hdy_switcher_drag_motion (GtkWidget      *widget,
 
   gtk_widget_get_allocation (widget, &allocation);
 
-  priv = hdy_switcher_get_instance_private (self);
+  priv = hdy_switcher_bar_get_instance_private (self);
 
   x += allocation.x;
   y += allocation.y;
@@ -596,25 +805,25 @@ hdy_switcher_drag_motion (GtkWidget      *widget,
 }
 
 static void
-hdy_switcher_drag_leave (GtkWidget      *widget,
-                         GdkDragContext *context,
-                         guint           time)
+hdy_switcher_bar_drag_leave (GtkWidget      *widget,
+                             GdkDragContext *context,
+                             guint           time)
 {
-  HdySwitcher *self = HDY_SWITCHER (widget);
+  HdySwitcherBar *self = HDY_SWITCHER_BAR (widget);
 
   remove_switch_timer (self);
 }
 
 /* Add a button by stack page */
 static void
-add_child (GtkWidget   *widget,
-           HdySwitcher *self)
+add_child (GtkWidget      *widget,
+           HdySwitcherBar *self)
 {
   GtkWidget *button;
   GList *group;
-  HdySwitcherPrivate *priv;
+  HdySwitcherBarPrivate *priv;
 
-  priv = hdy_switcher_get_instance_private (self);
+  priv = hdy_switcher_bar_get_instance_private (self);
 
   /* Create the button and bind some simple properties */
   button = g_object_new (HDY_TYPE_SWITCHER_BUTTON,
@@ -648,13 +857,13 @@ add_child (GtkWidget   *widget,
 
 /* Remove button by stack page */
 static void
-remove_child (GtkWidget   *widget,
-              HdySwitcher *self)
+remove_child (GtkWidget      *widget,
+              HdySwitcherBar *self)
 {
   GtkWidget *button;
-  HdySwitcherPrivate *priv;
+  HdySwitcherBarPrivate *priv;
 
-  priv = hdy_switcher_get_instance_private (self);
+  priv = hdy_switcher_bar_get_instance_private (self);
 
   g_signal_handlers_disconnect_by_func (widget, on_title_icon_visible_updated, self);
   g_signal_handlers_disconnect_by_func (widget, on_position_updated, self);
@@ -668,12 +877,12 @@ remove_child (GtkWidget   *widget,
 
 /* Generate buttons for the stack */
 static void
-populate_switcher (HdySwitcher *self)
+populate_switcher (HdySwitcherBar *self)
 {
-  HdySwitcherPrivate *priv;
+  HdySwitcherBarPrivate *priv;
   GtkWidget *widget, *button;
 
-  priv = hdy_switcher_get_instance_private (self);
+  priv = hdy_switcher_bar_get_instance_private (self);
 
   /* Create the buttons */
   gtk_container_foreach (GTK_CONTAINER (priv->stack), (GtkCallback)add_child, self);
@@ -691,25 +900,25 @@ populate_switcher (HdySwitcher *self)
 
 /* Remove all buttons from the switcher */
 static void
-clear_switcher (HdySwitcher *self)
+clear_switcher (HdySwitcherBar *self)
 {
-  HdySwitcherPrivate *priv;
+  HdySwitcherBarPrivate *priv;
 
-  priv = hdy_switcher_get_instance_private (self);
+  priv = hdy_switcher_bar_get_instance_private (self);
   gtk_container_foreach (GTK_CONTAINER (priv->stack), (GtkCallback)remove_child, self);
 }
 
 /* The active stack page changed */
 static void
-on_child_changed (GtkWidget   *widget,
-                  GParamSpec  *pspec,
-                  HdySwitcher *self)
+on_child_changed (GtkWidget      *widget,
+                  GParamSpec     *pspec,
+                  HdySwitcherBar *self)
 {
   GtkWidget *child;
   GtkWidget *button;
-  HdySwitcherPrivate *priv;
+  HdySwitcherBarPrivate *priv;
 
-  priv = hdy_switcher_get_instance_private (self);
+  priv = hdy_switcher_bar_get_instance_private (self);
 
   child = gtk_stack_get_visible_child (GTK_STACK (widget));
 
@@ -727,29 +936,29 @@ on_child_changed (GtkWidget   *widget,
 
 /* A page was added to the stack */
 static void
-on_stack_child_added (GtkContainer *container,
-                      GtkWidget    *widget,
-                      HdySwitcher  *self)
+on_stack_child_added (GtkContainer    *container,
+                      GtkWidget       *widget,
+                      HdySwitcherBar  *self)
 {
   add_child (widget, self);
 }
 
 /* A page was removed from the stack */
 static void
-on_stack_child_removed (GtkContainer *container,
-                        GtkWidget    *widget,
-                        HdySwitcher  *self)
+on_stack_child_removed (GtkContainer    *container,
+                        GtkWidget       *widget,
+                        HdySwitcherBar  *self)
 {
   remove_child (widget, self);
 }
 
 /* Disconnect to various signals on the stack itself */
 static void
-disconnect_stack_signals (HdySwitcher *switcher)
+disconnect_stack_signals (HdySwitcherBar *switcher)
 {
-  HdySwitcherPrivate *priv;
+  HdySwitcherBarPrivate *priv;
 
-  priv = hdy_switcher_get_instance_private (switcher);
+  priv = hdy_switcher_bar_get_instance_private (switcher);
   g_signal_handlers_disconnect_by_func (priv->stack, on_stack_child_added, switcher);
   g_signal_handlers_disconnect_by_func (priv->stack, on_stack_child_removed, switcher);
   g_signal_handlers_disconnect_by_func (priv->stack, on_child_changed, switcher);
@@ -758,11 +967,11 @@ disconnect_stack_signals (HdySwitcher *switcher)
 
 /* Connect to various signals on the stack itself */
 static void
-connect_stack_signals (HdySwitcher *switcher)
+connect_stack_signals (HdySwitcherBar *switcher)
 {
-  HdySwitcherPrivate *priv;
+  HdySwitcherBarPrivate *priv;
 
-  priv = hdy_switcher_get_instance_private (switcher);
+  priv = hdy_switcher_bar_get_instance_private (switcher);
   g_signal_connect_after (priv->stack, "add",
                           G_CALLBACK (on_stack_child_added), switcher);
   g_signal_connect_after (priv->stack, "remove",
@@ -773,40 +982,17 @@ connect_stack_signals (HdySwitcher *switcher)
                             G_CALLBACK (disconnect_stack_signals), switcher);
 }
 
-/**
- * hdy_switcher_set_stack:
- * @self: a #HdySwitcher
- * @stack: (allow-none): a #GtkStack
- *
- * Sets the #GtkStack to control.
- *
- * C Usage
- * |[<!-- language="C" -->
- * hdy_switcher_set_stack (HDY_SWITCHER (switcher), GTK_STACK (stack));
- * ]|
- * 
- * Vala Usage
- * |[<!-- language="Vala" -->
- * switcher.stack = stack;
- * ]|
- * 
- * Python Usage
- * |[<!-- language="Python" -->
- * switcher.props.stack = stack
- * ]|
- * 
- * Since: 0.0.8
- */
-void
-hdy_switcher_set_stack (HdySwitcher *self,
-                        GtkStack    *stack)
+
+static void
+hdy_switcher_bar_set_stack (HdySwitcherBar *self,
+                            GtkStack       *stack)
 {
-  HdySwitcherPrivate *priv;
+  HdySwitcherBarPrivate *priv;
 
   g_return_if_fail (HDY_IS_SWITCHER (self));
   g_return_if_fail (GTK_IS_STACK (stack) || stack == NULL);
 
-  priv = hdy_switcher_get_instance_private (self);
+  priv = hdy_switcher_bar_get_instance_private (self);
 
   /* Don't do anything, it's already the stack */
   if (priv->stack == stack)
@@ -831,62 +1017,15 @@ hdy_switcher_set_stack (HdySwitcher *self,
   g_object_notify (G_OBJECT (self), "stack");
 }
 
-/**
- * hdy_switcher_get_stack:
- * @self: a #HdySwitcher
- *
- * Get the #GtkStack being controlled by the #HdySwitcher
- *
- * See: hdy_switcher_set_stack()
- * 
- * Returns: (nullable) (transfer none): the #GtkStack, or %NULL if none has been set
- *
- * Since: 0.0.8
- */
-GtkStack *
-hdy_switcher_get_stack (HdySwitcher *self)
+static void
+hdy_switcher_bar_set_icon_size (HdySwitcherBar *self,
+                            GtkIconSize     icon_size)
 {
-  HdySwitcherPrivate *priv;
-  g_return_val_if_fail (HDY_IS_SWITCHER (self), NULL);
-
-  priv = hdy_switcher_get_instance_private (self);
-
-  return priv->stack;
-}
-
-/**
- * hdy_switcher_set_icon_size:
- * @self: a #HdySwitcher
- * @icon_size: the new icon size
- *
- * Change the icon size of the images used in the #HdySwitcher
- * 
- * C Usage
- * |[<!-- language="C" -->
- * hdy_switcher_set_icon_size (HDY_SWITCHER (switcher), GTK_ICON_SIZE_BUTTON);
- * ]|
- * 
- * Vala Usage
- * |[<!-- language="Vala" -->
- * switcher.icon_size = Gtk.IconSize.BUTTON;
- * ]|
- * 
- * Python Usage
- * |[<!-- language="Python" -->
- * switcher.props.icon_size = Gtk.IconSize.BUTTON
- * ]|
- *
- * Since: 0.0.8
-   */
-void
-hdy_switcher_set_icon_size (HdySwitcher *self,
-                            GtkIconSize  icon_size)
-{
-  HdySwitcherPrivate *priv;
+  HdySwitcherBarPrivate *priv;
 
   g_return_if_fail (HDY_IS_SWITCHER (self));
 
-  priv = hdy_switcher_get_instance_private (self);
+  priv = hdy_switcher_bar_get_instance_private (self);
 
   /* Surpress non-changes */
   if (icon_size == priv->icon_size)
@@ -897,14 +1036,14 @@ hdy_switcher_set_icon_size (HdySwitcher *self,
 
 /* Handle GtkOrientable.set_orientation */
 static void
-hdy_switcher_set_orientation (HdySwitcher    *self,
-                              GtkOrientation  orientation)
+hdy_switcher_bar_set_orientation (HdySwitcherBar *self,
+                                  GtkOrientation  orientation)
 {
-  HdySwitcherPrivate *priv;
+  HdySwitcherBarPrivate *priv;
 
   g_return_if_fail (HDY_IS_SWITCHER (self));
 
-  priv = hdy_switcher_get_instance_private (self);
+  priv = hdy_switcher_bar_get_instance_private (self);
 
   /* Surpress non-changes to avoid needless style recalculations */
   if (orientation == priv->orientation)
@@ -916,17 +1055,16 @@ hdy_switcher_set_orientation (HdySwitcher    *self,
 }
 
 static void
-hdy_switcher_get_property (GObject      *object,
-                           guint         prop_id,
-                           GValue       *value,
-                           GParamSpec   *pspec)
+hdy_switcher_bar_get_property (GObject      *object,
+                               guint         prop_id,
+                               GValue       *value,
+                               GParamSpec   *pspec)
 {
-  HdySwitcher *self = HDY_SWITCHER (object);
-  HdySwitcherPrivate *priv;
+  HdySwitcherBar *self = HDY_SWITCHER_BAR (object);
+  HdySwitcherBarPrivate *priv;
 
-  priv = hdy_switcher_get_instance_private (self);
-  switch (prop_id)
-    {
+  priv = hdy_switcher_bar_get_instance_private (self);
+  switch (prop_id) {
     case PROP_ICON_SIZE:
       g_value_set_int (value, priv->icon_size);
       break;
@@ -942,29 +1080,28 @@ hdy_switcher_get_property (GObject      *object,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
-    }
+  }
 }
 
 static void
-hdy_switcher_set_property (GObject      *object,
-                           guint         prop_id,
-                           const GValue *value,
-                           GParamSpec   *pspec)
+hdy_switcher_bar_set_property (GObject      *object,
+                               guint         prop_id,
+                               const GValue *value,
+                               GParamSpec   *pspec)
 {
-  HdySwitcher *self = HDY_SWITCHER (object);
+  HdySwitcherBar *self = HDY_SWITCHER_BAR (object);
 
-  switch (prop_id)
-    {
+  switch (prop_id) {
     case PROP_ICON_SIZE:
-      hdy_switcher_set_icon_size (self, g_value_get_int (value));
+      hdy_switcher_bar_set_icon_size (self, g_value_get_int (value));
       break;
 
     case PROP_STACK:
-      hdy_switcher_set_stack (self, g_value_get_object (value));
+      hdy_switcher_bar_set_stack (self, g_value_get_object (value));
       break;
 
     case PROP_ORIENTATION:
-      hdy_switcher_set_orientation (self, g_value_get_enum (value));
+      hdy_switcher_bar_set_orientation (self, g_value_get_enum (value));
       break;
 
     default:
@@ -974,35 +1111,38 @@ hdy_switcher_set_property (GObject      *object,
 }
 
 static void
-hdy_switcher_dispose (GObject *object)
+hdy_switcher_bar_dispose (GObject *object)
 {
-  HdySwitcher *self = HDY_SWITCHER (object);
+  HdySwitcherBar *self = HDY_SWITCHER_BAR (object);
+  //HdySwitcherBarPrivate *priv;
+
+  //priv = hdy_switcher_bar_get_instance_private (self);
 
   remove_switch_timer (self);
-  hdy_switcher_set_stack (self, NULL);
+  hdy_switcher_bar_set_stack (self, NULL);
 
-  G_OBJECT_CLASS (hdy_switcher_parent_class)->dispose (object);
+  G_OBJECT_CLASS (hdy_switcher_bar_parent_class)->dispose (object);
 }
 
 static void
-hdy_switcher_finalize (GObject *object)
+hdy_switcher_bar_finalize (GObject *object)
 {
-  HdySwitcher *self = HDY_SWITCHER (object);
-  HdySwitcherPrivate *priv;
+  HdySwitcherBar *self = HDY_SWITCHER_BAR (object);
+  HdySwitcherBarPrivate *priv;
 
-  priv = hdy_switcher_get_instance_private (self);
+  priv = hdy_switcher_bar_get_instance_private (self);
 
   g_hash_table_destroy (priv->buttons);
 
-  G_OBJECT_CLASS (hdy_switcher_parent_class)->finalize (object);
+  G_OBJECT_CLASS (hdy_switcher_bar_parent_class)->finalize (object);
 }
 
 static void
-hdy_switcher_get_preferred_width (GtkWidget *widget,
+hdy_switcher_bar_get_preferred_width (GtkWidget *widget,
                                   gint      *min,
                                   gint      *nat)
 {
-  HdySwitcher *self = HDY_SWITCHER (widget);
+  HdySwitcherBar *self = HDY_SWITCHER_BAR (widget);
   gint widest_v = 0;
   gint widest_h = 0;
   gint count = 0;
@@ -1027,8 +1167,8 @@ hdy_switcher_get_preferred_width (GtkWidget *widget,
 }
 
 static gint
-is_narrow (HdySwitcher *self,
-           gint         width)
+is_narrow (HdySwitcherBar *self,
+           gint            width)
 {
   gint widest_h = 0;
   gint count = 0;
@@ -1047,71 +1187,43 @@ is_narrow (HdySwitcher *self,
 }
 
 static void
-hdy_switcher_size_allocate (GtkWidget        *widget,
-                                   GtkAllocation    *allocation)
+hdy_switcher_bar_size_allocate (GtkWidget     *widget,
+                                GtkAllocation *allocation)
 {
-  if (is_narrow (HDY_SWITCHER (widget), allocation->width)) {
+  if (is_narrow (HDY_SWITCHER_BAR (widget), allocation->width)) {
     gtk_orientable_set_orientation (GTK_ORIENTABLE (widget), GTK_ORIENTATION_VERTICAL);
   } else {
     gtk_orientable_set_orientation (GTK_ORIENTABLE (widget), GTK_ORIENTATION_HORIZONTAL);
   }
 
-  GTK_WIDGET_CLASS (hdy_switcher_parent_class)->size_allocate (widget, allocation);
+  GTK_WIDGET_CLASS (hdy_switcher_bar_parent_class)->size_allocate (widget, allocation);
 }
 
 static void
-hdy_switcher_class_init (HdySwitcherClass *class)
+hdy_switcher_bar_class_init (HdySwitcherBarClass *class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (class);
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (class);
   GtkCssProvider *provider;
 
-  object_class->get_property = hdy_switcher_get_property;
-  object_class->set_property = hdy_switcher_set_property;
-  object_class->dispose = hdy_switcher_dispose;
-  object_class->finalize = hdy_switcher_finalize;
+  object_class->get_property = hdy_switcher_bar_get_property;
+  object_class->set_property = hdy_switcher_bar_set_property;
+  object_class->dispose = hdy_switcher_bar_dispose;
+  object_class->finalize = hdy_switcher_bar_finalize;
 
-  widget_class->size_allocate = hdy_switcher_size_allocate;
-  widget_class->get_preferred_width = hdy_switcher_get_preferred_width;
-  widget_class->drag_motion = hdy_switcher_drag_motion;
-  widget_class->drag_leave = hdy_switcher_drag_leave;
+  widget_class->size_allocate = hdy_switcher_bar_size_allocate;
+  widget_class->get_preferred_width = hdy_switcher_bar_get_preferred_width;
+  widget_class->drag_motion = hdy_switcher_bar_drag_motion;
+  widget_class->drag_leave = hdy_switcher_bar_drag_leave;
 
-  /**
-   * HdySwitcher:icon-size:
-   *
-   * Use the "icon-size" property to change the size of the images
-   *
-   * Since: 0.0.8
-   */
-  g_object_class_install_property (object_class,
-                                   PROP_ICON_SIZE,
-                                   g_param_spec_int ("icon-size",
-                                                     _("Icon Size"),
-                                                     _("Symbolic size to use for named icon"),
-                                                     0, G_MAXINT,
-                                                     GTK_ICON_SIZE_BUTTON,
-                                                     G_PARAM_EXPLICIT_NOTIFY |
-                                                     G_PARAM_READWRITE |
-                                                     G_PARAM_STATIC_STRINGS));
+  g_object_class_override_property (object_class,
+                                    PROP_ICON_SIZE,
+                                    "icon-size");
 
-  /**
-   * HdySwitcher:stack:
-   *
-   * The #GtkStack the #HdySwitcher controls
-   *
-   * Since: 0.0.8
-   */
-  g_object_class_install_property (object_class,
-                                   PROP_STACK,
-                                   g_param_spec_object ("stack",
-                                                        _("Stack"),
-                                                        _("Stack"),
-                                                        GTK_TYPE_STACK,
-                                                        G_PARAM_READWRITE |
-                                                        G_PARAM_CONSTRUCT |
-                                                        G_PARAM_STATIC_STRINGS));
+  g_object_class_override_property (object_class,
+                                    PROP_STACK,
+                                    "stack");
 
-  /* We switch the buttons orientation instead of the box containing them */
   g_object_class_override_property (object_class,
                                     PROP_ORIENTATION,
                                     "orientation");
@@ -1128,9 +1240,9 @@ hdy_switcher_class_init (HdySwitcherClass *class)
 }
 
 /**
- * hdy_switcher_new:
+ * hdy_switcher_bar_new:
  *
- * Create a #HdySwitcher with #GtkWindow:transient-for set to parent
+ * Create a #HdySwitcherBar with #GtkWindow:transient-for set to parent
  *
  * C Usage
  * |[<!-- language="C" -->
@@ -1150,7 +1262,246 @@ hdy_switcher_class_init (HdySwitcherClass *class)
  * Since: 0.0.8
  */
 GtkWidget *
-hdy_switcher_new (void)
+hdy_switcher_bar_new (void)
 {
-  return g_object_new (HDY_TYPE_SWITCHER, NULL);
+  return g_object_new (HDY_TYPE_SWITCHER_BAR, NULL);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+typedef struct {
+  GtkWidget      *switcher;
+  GtkWidget      *label;
+  HdySwitcherBar *secondary;
+} HdyPrimarySwitcherPrivate;
+
+enum {
+  PRI_PROP_0,
+  PRI_PROP_ICON_SIZE,
+  PRI_PROP_STACK,
+  PRI_PROP_SECONDARY,
+  PRI_PROP_TITLE
+};
+
+G_DEFINE_TYPE_WITH_CODE (HdyPrimarySwitcher, hdy_primary_switcher, GTK_TYPE_STACK,
+                         G_ADD_PRIVATE (HdyPrimarySwitcher)
+                         G_IMPLEMENT_INTERFACE (HDY_TYPE_SWITCHER, NULL))
+
+static void
+hdy_primary_switcher_init (HdyPrimarySwitcher *self)
+{
+  HdyPrimarySwitcherPrivate *priv;
+
+  priv = hdy_primary_switcher_get_instance_private (self);
+
+  g_object_set (self,
+                "homogeneous", FALSE,
+                "vhomogeneous", TRUE,
+                NULL);
+  
+  priv->switcher = hdy_switcher_bar_new ();
+  gtk_widget_show (priv->switcher);
+  gtk_stack_add_named (GTK_STACK (self), priv->switcher, "switcher");
+
+  priv->label = gtk_label_new (NULL);
+  gtk_label_set_ellipsize (GTK_LABEL (priv->label), PANGO_ELLIPSIZE_END);
+  g_object_bind_property (self, "title", priv->label, "label", G_BINDING_SYNC_CREATE);
+  gtk_widget_show (priv->label);
+  gtk_stack_add_named (GTK_STACK (self), priv->label, "label");
+
+  gtk_stack_set_visible_child (GTK_STACK (self), priv->switcher);
+
+  gtk_widget_set_focus_on_click (GTK_WIDGET (self), FALSE);
+}
+
+static void
+hdy_primary_switcher_get_property (GObject      *object,
+                                  guint         prop_id,
+                                  GValue       *value,
+                                  GParamSpec   *pspec)
+{
+  HdyPrimarySwitcher *self = HDY_PRIMARY_SWITCHER (object);
+  HdyPrimarySwitcherPrivate *priv = hdy_primary_switcher_get_instance_private (self);
+
+  switch (prop_id) {
+    case PRI_PROP_ICON_SIZE:
+      g_object_get_property (G_OBJECT (priv->switcher), "icon-size", value);
+      break;
+
+    case PRI_PROP_STACK:
+      g_object_get_property (G_OBJECT (priv->switcher), "stack", value);
+      break;
+
+    case PRI_PROP_SECONDARY:
+      g_value_set_object (value, hdy_primary_switcher_get_secondary (self));
+      break;
+
+    case PRI_PROP_TITLE:
+      g_object_get_property (G_OBJECT (priv->label), "label", value);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+    }
+}
+
+static void
+hdy_primary_switcher_set_property (GObject      *object,
+                                   guint         prop_id,
+                                   const GValue *value,
+                                   GParamSpec   *pspec)
+{
+  HdyPrimarySwitcher *self = HDY_PRIMARY_SWITCHER (object);
+  HdyPrimarySwitcherPrivate *priv = hdy_primary_switcher_get_instance_private (self);
+
+  switch (prop_id) {
+    case PRI_PROP_ICON_SIZE:
+      g_object_set_property (G_OBJECT (priv->switcher), "icon-size", value);
+      break;
+
+    case PRI_PROP_STACK:
+      g_object_set_property (G_OBJECT (priv->switcher), "stack", value);
+      break;
+
+    case PRI_PROP_SECONDARY:
+      hdy_primary_switcher_set_secondary (self, g_value_get_object (value));
+      break;
+
+    case PRI_PROP_TITLE:
+      g_object_set_property (G_OBJECT (priv->label), "label", value);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+    }
+}
+
+
+static void
+hdy_primary_switcher_size_allocate (GtkWidget     *widget,
+                                    GtkAllocation *allocation)
+{
+  HdyPrimarySwitcherPrivate *priv;
+
+  priv = hdy_primary_switcher_get_instance_private (HDY_PRIMARY_SWITCHER (widget));
+
+  /* Same as HdyDialog */
+  if (allocation->width <= 400) {
+    gtk_stack_set_visible_child (GTK_STACK (widget), priv->label);
+  } else {
+    gtk_stack_set_visible_child (GTK_STACK (widget), priv->switcher);
+  }
+
+  GTK_WIDGET_CLASS (hdy_primary_switcher_parent_class)->size_allocate (widget, allocation);
+}
+
+static void
+hdy_primary_switcher_class_init (HdyPrimarySwitcherClass *klass)
+{
+  GObjectClass   *object_class = G_OBJECT_CLASS (klass);
+  GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
+
+  object_class->get_property = hdy_primary_switcher_get_property;
+  object_class->set_property = hdy_primary_switcher_set_property;
+
+  widget_class->size_allocate = hdy_primary_switcher_size_allocate;
+
+  /**
+   * HdyPrimarySwitcher:title:
+   *
+   *
+   * Since: 0.0.8
+   */
+  g_object_class_install_property (object_class,
+                                   PRI_PROP_TITLE,
+                                   g_param_spec_string ("title",
+                                                        _("Title"),
+                                                        _("Title to show when collapsed"),
+                                                        NULL,
+                                                        G_PARAM_EXPLICIT_NOTIFY |
+                                                        G_PARAM_READWRITE |
+                                                        G_PARAM_STATIC_STRINGS));
+
+  /**
+   * HdyPrimarySwitcher:secondary:
+   *
+   *
+   * Since: 0.0.8
+   */
+  g_object_class_install_property (object_class,
+                                   PRI_PROP_SECONDARY,
+                                   g_param_spec_object ("secondary",
+                                                        _("Secondary"),
+                                                        _("Alternative switcher"),
+                                                        HDY_TYPE_SWITCHER_BAR,
+                                                        G_PARAM_EXPLICIT_NOTIFY |
+                                                        G_PARAM_READWRITE |
+                                                        G_PARAM_STATIC_STRINGS));
+
+  g_object_class_override_property (object_class,
+                                    PRI_PROP_ICON_SIZE,
+                                    "icon-size");
+
+  g_object_class_override_property (object_class,
+                                    PRI_PROP_STACK,
+                                    "stack");
+
+  gtk_widget_class_set_css_name (widget_class, "hdyprimaryswitcher");
+}
+
+void
+hdy_primary_switcher_set_secondary (HdyPrimarySwitcher *self,
+                                    HdySwitcherBar     *secondary)
+{
+  HdyPrimarySwitcherPrivate *priv;
+
+  g_return_if_fail (HDY_IS_PRIMARY_SWITCHER (self));
+  g_return_if_fail (HDY_IS_SWITCHER_BAR (secondary) || secondary == NULL);
+  
+  priv = hdy_primary_switcher_get_instance_private (self);
+
+  priv->secondary = secondary;
+}
+
+HdySwitcherBar *
+hdy_primary_switcher_get_secondary (HdyPrimarySwitcher *self)
+{
+  HdyPrimarySwitcherPrivate *priv;
+
+  g_return_val_if_fail (HDY_IS_PRIMARY_SWITCHER (self), NULL);
+  
+  priv = hdy_primary_switcher_get_instance_private (self);
+
+  return priv->secondary;
+}
+
+GtkWidget *
+hdy_primary_switcher_new (void)
+{
+  return g_object_new (HDY_IS_PRIMARY_SWITCHER, NULL);
 }
