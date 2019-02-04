@@ -40,9 +40,11 @@ G_BEGIN_DECLS
 #include "hdy-leaflet.h"
 #include "hdy-list-box.h"
 #include "hdy-main.h"
+#include "hdy-primary-switcher.h"
 #include "hdy-search-bar.h"
 #include "hdy-string-utf8.h"
 #include "hdy-switcher.h"
+#include "hdy-switcher-bar.h"
 #include "hdy-title-bar.h"
 #include "hdy-value-object.h"
 

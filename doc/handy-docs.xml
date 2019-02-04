@@ -34,7 +34,7 @@
     <xi:include href="visual-index.xml"/>
   </chapter>
 
-  <chapter id="core-api">
+  <part id="core-api">
     <title>Widgets and Objects</title>
     <xi:include href="xml/hdy-action-row.xml"/>
     <xi:include href="xml/hdy-arrows.xml"/>
@@ -49,10 +49,19 @@
     <xi:include href="xml/hdy-header-group.xml"/>
     <xi:include href="xml/hdy-leaflet.xml"/>
     <xi:include href="xml/hdy-search-bar.xml"/>
-    <xi:include href="xml/hdy-switcher.xml"/>
+
+    <chapter>
+      <title>Switchers</title>
+
+      <xi:include href="xml/hdy-switcher.xml"/>
+      <xi:include href="xml/hdy-switcher-bar.xml"/>
+      <xi:include href="xml/hdy-switcher-button-private.xml"/>
+      <xi:include href="xml/hdy-primary-switcher.xml"/>
+    </chapter>
+
     <xi:include href="xml/hdy-title-bar.xml"/>
     <xi:include href="xml/hdy-value-object.xml"/>
-  </chapter>
+  </part>
 
   <chapter id="helpers">
     <title>Helpers</title>
