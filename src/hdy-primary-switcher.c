@@ -46,9 +46,10 @@
 
 
 typedef struct {
-  GtkWidget      *switcher;
-  GtkWidget      *label;
-  HdySwitcherBar *secondary;
+  GtkWidget            *switcher;
+  GtkWidget            *label;
+  HdySecondarySwitcher *secondary;
+  gboolean              secondary_active;
 } HdyPrimarySwitcherPrivate;
 
 enum {
@@ -56,7 +57,8 @@ enum {
   PROP_ICON_SIZE,
   PROP_STACK,
   PROP_SECONDARY,
-  PROP_TITLE
+  PROP_SECONDARY_ACTIVE,
+  PROP_TITLE,
 };
 
 G_DEFINE_TYPE_WITH_CODE (HdyPrimarySwitcher, hdy_primary_switcher, GTK_TYPE_STACK,
@@ -67,22 +69,29 @@ static void
 hdy_primary_switcher_init (HdyPrimarySwitcher *self)
 {
   HdyPrimarySwitcherPrivate *priv;
+  GtkStyleContext *context;
 
   priv = hdy_primary_switcher_get_instance_private (self);
 
-  g_object_set (self,
-                "homogeneous", FALSE,
-                "vhomogeneous", TRUE,
-                NULL);
+  priv->secondary_active = FALSE;
+
+  gtk_stack_set_hhomogeneous (GTK_STACK (self), FALSE);
+  gtk_stack_set_vhomogeneous (GTK_STACK (self), FALSE);
+  gtk_widget_set_halign (GTK_WIDGET (self), GTK_ALIGN_CENTER);
   
   priv->switcher = hdy_switcher_bar_new ();
   gtk_widget_show (priv->switcher);
   gtk_stack_add_named (GTK_STACK (self), priv->switcher, "switcher");
 
   priv->label = gtk_label_new (NULL);
+  context = gtk_widget_get_style_context (priv->label);
+  gtk_style_context_add_class (context, "title");
+  gtk_widget_set_halign (priv->label, GTK_ALIGN_CENTER);
+  gtk_widget_set_valign (priv->label, GTK_ALIGN_CENTER);
   gtk_label_set_ellipsize (GTK_LABEL (priv->label), PANGO_ELLIPSIZE_END);
   g_object_bind_property (self, "title", priv->label, "label", G_BINDING_SYNC_CREATE);
   gtk_widget_show (priv->label);
+
   gtk_stack_add_named (GTK_STACK (self), priv->label, "label");
 
   gtk_stack_set_visible_child (GTK_STACK (self), priv->switcher);
@@ -110,6 +119,10 @@ hdy_primary_switcher_get_property (GObject      *object,
 
     case PROP_SECONDARY:
       g_value_set_object (value, hdy_primary_switcher_get_secondary (self));
+      break;
+
+    case PROP_SECONDARY_ACTIVE:
+      g_value_set_boolean (value, priv->secondary_active);
       break;
 
     case PROP_TITLE:
@@ -144,6 +157,15 @@ hdy_primary_switcher_set_property (GObject      *object,
       hdy_primary_switcher_set_secondary (self, g_value_get_object (value));
       break;
 
+    case PROP_SECONDARY_ACTIVE:
+      priv->secondary_active = g_value_get_boolean (value);
+      if (priv->secondary_active) {
+        gtk_stack_set_visible_child (GTK_STACK (self), priv->label);
+      } else {
+        gtk_stack_set_visible_child (GTK_STACK (self), priv->switcher);
+      }
+      break;
+
     case PROP_TITLE:
       g_object_set_property (G_OBJECT (priv->label), "label", value);
       break;
@@ -154,25 +176,6 @@ hdy_primary_switcher_set_property (GObject      *object,
     }
 }
 
-
-static void
-hdy_primary_switcher_size_allocate (GtkWidget     *widget,
-                                    GtkAllocation *allocation)
-{
-  HdyPrimarySwitcherPrivate *priv;
-
-  priv = hdy_primary_switcher_get_instance_private (HDY_PRIMARY_SWITCHER (widget));
-
-  /* Same as HdyDialog */
-  if (allocation->width <= 400) {
-    gtk_stack_set_visible_child (GTK_STACK (widget), priv->label);
-  } else {
-    gtk_stack_set_visible_child (GTK_STACK (widget), priv->switcher);
-  }
-
-  GTK_WIDGET_CLASS (hdy_primary_switcher_parent_class)->size_allocate (widget, allocation);
-}
-
 static void
 hdy_primary_switcher_class_init (HdyPrimarySwitcherClass *klass)
 {
@@ -181,8 +184,6 @@ hdy_primary_switcher_class_init (HdyPrimarySwitcherClass *klass)
 
   object_class->get_property = hdy_primary_switcher_get_property;
   object_class->set_property = hdy_primary_switcher_set_property;
-
-  widget_class->size_allocate = hdy_primary_switcher_size_allocate;
 
   /**
    * HdyPrimarySwitcher:title:
@@ -196,7 +197,6 @@ hdy_primary_switcher_class_init (HdyPrimarySwitcherClass *klass)
                                                         _("Title"),
                                                         _("Title to show when collapsed"),
                                                         NULL,
-                                                        G_PARAM_EXPLICIT_NOTIFY |
                                                         G_PARAM_READWRITE |
                                                         G_PARAM_STATIC_STRINGS));
 
@@ -211,8 +211,23 @@ hdy_primary_switcher_class_init (HdyPrimarySwitcherClass *klass)
                                    g_param_spec_object ("secondary",
                                                         _("Secondary"),
                                                         _("Alternative switcher"),
-                                                        HDY_TYPE_SWITCHER_BAR,
+                                                        HDY_TYPE_SECONDARY_SWITCHER,
                                                         G_PARAM_EXPLICIT_NOTIFY |
+                                                        G_PARAM_READWRITE |
+                                                        G_PARAM_STATIC_STRINGS));
+
+  /**
+   * HdyPrimarySwitcher:secondary-active:
+   *
+   *
+   * Since: 0.0.8
+   */
+  g_object_class_install_property (object_class,
+                                   PROP_SECONDARY_ACTIVE,
+                                   g_param_spec_boolean ("secondary-active",
+                                                        _("Secondary Active"),
+                                                        _("Secondary switcher in use"),
+                                                        FALSE,
                                                         G_PARAM_READWRITE |
                                                         G_PARAM_STATIC_STRINGS));
 
@@ -227,18 +242,42 @@ hdy_primary_switcher_class_init (HdyPrimarySwitcherClass *klass)
   gtk_widget_class_set_css_name (widget_class, "hdyprimaryswitcher");
 }
 
-void
-hdy_primary_switcher_set_secondary (HdyPrimarySwitcher *self,
-                                    HdySwitcherBar     *secondary)
+static void
+secondary_allocate_cb (GtkWidget          *secondary,
+                       GdkRectangle       *allocation,
+                       HdyPrimarySwitcher *self)
 {
   HdyPrimarySwitcherPrivate *priv;
 
   g_return_if_fail (HDY_IS_PRIMARY_SWITCHER (self));
-  g_return_if_fail (HDY_IS_SWITCHER_BAR (secondary) || secondary == NULL);
+  
+  priv = hdy_primary_switcher_get_instance_private (self);
+
+  g_object_set (self,
+                "secondary-active", allocation->width <= 400,
+                NULL);
+}
+
+void
+hdy_primary_switcher_set_secondary (HdyPrimarySwitcher   *self,
+                                    HdySecondarySwitcher *secondary)
+{
+  HdyPrimarySwitcherPrivate *priv;
+
+  g_return_if_fail (HDY_IS_PRIMARY_SWITCHER (self));
+  g_return_if_fail (HDY_IS_SECONDARY_SWITCHER (secondary) || secondary == NULL);
   
   priv = hdy_primary_switcher_get_instance_private (self);
 
   priv->secondary = secondary;
+
+  if (priv->secondary) {
+    g_signal_connect (priv->secondary, "size-allocate",
+                      G_CALLBACK (secondary_allocate_cb), self);
+    g_object_bind_property (self, "secondary-active", priv->secondary, "active", G_BINDING_SYNC_CREATE);
+  }
+
+  g_object_notify (G_OBJECT (self), "secondary");
 }
 
 /**
@@ -249,11 +288,11 @@ hdy_primary_switcher_set_secondary (HdyPrimarySwitcher *self,
  *
  * See: hdy_primary_switcher_set_secondary()
  * 
- * Returns: (nullable) (transfer none): the #HdySwitcherBar, or %NULL if none has been set
+ * Returns: (nullable) (transfer none): the #HdySecondarySwitcher, or %NULL if none has been set
  *
  * Since: 0.0.8
  */
-HdySwitcherBar *
+HdySecondarySwitcher *
 hdy_primary_switcher_get_secondary (HdyPrimarySwitcher *self)
 {
   HdyPrimarySwitcherPrivate *priv;

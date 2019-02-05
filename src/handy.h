@@ -42,6 +42,7 @@ G_BEGIN_DECLS
 #include "hdy-main.h"
 #include "hdy-primary-switcher.h"
 #include "hdy-search-bar.h"
+#include "hdy-secondary-switcher.h"
 #include "hdy-string-utf8.h"
 #include "hdy-switcher.h"
 #include "hdy-switcher-bar.h"

@@ -618,8 +618,8 @@ hdy_switcher_bar_finalize (GObject *object)
 
 static void
 hdy_switcher_bar_get_preferred_width (GtkWidget *widget,
-                                  gint      *min,
-                                  gint      *nat)
+                                      gint      *min,
+                                      gint      *nat)
 {
   HdySwitcherBar *self = HDY_SWITCHER_BAR (widget);
   gint widest_v = 0;

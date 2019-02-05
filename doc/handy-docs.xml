@@ -57,6 +57,7 @@
       <xi:include href="xml/hdy-switcher-bar.xml"/>
       <xi:include href="xml/hdy-switcher-button-private.xml"/>
       <xi:include href="xml/hdy-primary-switcher.xml"/>
+      <xi:include href="xml/hdy-secondary-switcher.xml"/>
     </chapter>
 
     <xi:include href="xml/hdy-title-bar.xml"/>

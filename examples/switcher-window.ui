@@ -7,7 +7,6 @@
     <property name="can_focus">False</property>
     <property name="modal">True</property>
     <property name="window_position">center-on-parent</property>
-    <property name="title">HdySwitcher Demo</property>
     <child>
       <object class="GtkBox">
         <property name="visible">True</property>
@@ -77,25 +76,10 @@
           </packing>
         </child>
         <child>
-          <object class="GtkActionBar">
+          <object class="HdySecondarySwitcher" id="secondary">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <child>
-              <placeholder/>
-            </child>
-            <child type="center">
-              <object class="HdySwitcherBar" id="secondary">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="stack">stack</property>
-              </object>
-              <packing>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <style>
-              <class name="hdy-secondary-switcher"/>
-            </style>
+            <property name="stack">stack</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -110,6 +94,7 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="show_close_button">True</property>
+        <property name="title">HdySwitcher Demo</property>
         <child>
           <placeholder/>
         </child>
