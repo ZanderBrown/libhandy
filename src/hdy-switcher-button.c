@@ -19,7 +19,7 @@
  * 
  * Design Information: [GitLab Issue](https://source.puri.sm/Librem5/libhandy/issues/64)
  * 
- * Since: 0.0.8
+ * Since: 0.0.9
  */
 
 #define VERTICAL_SPACING 4
@@ -226,7 +226,7 @@ hdy_switcher_button_class_init (HdySwitcherButtonClass *klass)
    *
    * Note: This is controlled via #GtkStack
    * 
-   * Since: 0.0.8
+   * Since: 0.0.9
    */
   g_object_class_install_property (object_class,
                                    BTN_PROP_ICON_SIZE,
@@ -246,7 +246,7 @@ hdy_switcher_button_class_init (HdySwitcherButtonClass *klass)
    * 
    * Note: This is controlled via #GtkStack
    *
-   * Since: 0.0.8
+   * Since: 0.0.9
    */
   g_object_class_install_property (object_class,
                                    BTN_PROP_ICON_NAME,
@@ -265,7 +265,7 @@ hdy_switcher_button_class_init (HdySwitcherButtonClass *klass)
    *
    * Note: This is controlled via #GtkStack
    * 
-   * Since: 0.0.8
+   * Since: 0.0.9
    */
   g_object_class_install_property (object_class,
                                    BTN_PROP_NEEDS_ATTENTION,
@@ -288,7 +288,7 @@ hdy_switcher_button_class_init (HdySwitcherButtonClass *klass)
    *
    * Note: This is controlled via #HdySwitcher
    * 
-   * Since: 0.0.8
+   * Since: 0.0.9
    */
   g_object_class_install_property (object_class,
                                    BTN_PROP_STACK_CHILD,
@@ -315,7 +315,7 @@ hdy_switcher_button_class_init (HdySwitcherButtonClass *klass)
  * @h_min_width: (inout): the minimum width when horizontal
  * @h_nat_width: (inout): the natural width
  *
- * Since: 0.0.8
+ * Since: 0.0.9
  */
 void
 hdy_switcher_button_get_size (HdySwitcherButton *self,
@@ -339,7 +339,7 @@ hdy_switcher_button_get_size (HdySwitcherButton *self,
  * 
  * Returns: (transfer none): the #GtkWidget page in the #GtkStack
  *
- * Since: 0.0.8
+ * Since: 0.0.9
  */
 GtkWidget *
 hdy_switcher_button_get_stack_child (HdySwitcherButton *self)

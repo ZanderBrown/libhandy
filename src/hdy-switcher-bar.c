@@ -45,7 +45,7 @@
  * 
  * Design Information: [GitLab Issue](https://source.puri.sm/Librem5/libhandy/issues/64)
  * 
- * Since: 0.0.8
+ * Since: 0.0.9
  */
 
 #define TIMEOUT_EXPAND 500
@@ -593,9 +593,6 @@ static void
 hdy_switcher_bar_dispose (GObject *object)
 {
   HdySwitcherBar *self = HDY_SWITCHER_BAR (object);
-  //HdySwitcherBarPrivate *priv;
-
-  //priv = hdy_switcher_bar_get_instance_private (self);
 
   remove_switch_timer (self);
   hdy_switcher_bar_set_stack (self, NULL);
@@ -622,49 +619,63 @@ hdy_switcher_bar_get_preferred_width (GtkWidget *widget,
                                       gint      *nat)
 {
   HdySwitcherBar *self = HDY_SWITCHER_BAR (widget);
+  /* the greatest button width when vertical */
   gint widest_v = 0;
+  /* the greatest button width when horizontal */
   gint widest_h = 0;
+  /* number of buttons, used instead of g_list_length
+   * to avoid multiple iterations of the list */
   gint count = 0;
 
+  /* for each button */
   for (GList *l = gtk_container_get_children (GTK_CONTAINER (self)); l != NULL; l = g_list_next (l)) {
+    /* get the buttons minimum width for each orientation */
     gint v_min = 0;
     gint h_nat = 0;
 
     hdy_switcher_button_get_size (HDY_SWITCHER_BUTTON (l->data), &v_min, NULL, &h_nat);
 
-    if (v_min > widest_v)
-      widest_v = v_min;
-    
-    if (h_nat > widest_h)
-      widest_h = h_nat;
+    /* Update the widest if necessary */
+    widest_v = MAX (v_min, widest_v);
+    widest_h = MAX (h_nat, widest_h);
 
     count++;
   }
 
+  /* The minimum width is the widest vertical button * number of button */
   *min = widest_v * count;
+  /* Natural width is the same but when horizintal */
   *nat = widest_h * count;
 }
 
+/* Work out if a given width should be horizintal or verical */
 static gint
 is_narrow (HdySwitcherBar *self,
            gint            width)
 {
-  gint widest_h = 0;
+  /* The widest button in horizontal mode */
+  gint widest_h = 0; 
   gint count = 0;
 
+  /* for each button */
   for (GList *l = gtk_container_get_children (GTK_CONTAINER (self)); l != NULL; l = g_list_next (l)) {
     gint h_min = 0;
 
+    /* Get the horizontal minimum */
     hdy_switcher_button_get_size (HDY_SWITCHER_BUTTON (l->data), NULL, &h_min, NULL);
     
+    /* Update the widest */
     widest_h = MAX (widest_h, h_min);
 
     count++;
   }
 
+  /* We are narrow if we can't fit the required number of buttons
+   * at the minimum width of the widest button in the given width */
   return (widest_h * count) > width;
 }
 
+/* figure out how we will use the size we have been given */
 static void
 hdy_switcher_bar_size_allocate (GtkWidget     *widget,
                                 GtkAllocation *allocation)
@@ -709,7 +720,7 @@ hdy_switcher_bar_class_init (HdySwitcherBarClass *class)
 
   gtk_widget_class_set_css_name (widget_class, "hdyswitcher");
 
-  /* Load the styles for the widget, this feels very hacky */
+  /* Load the styles for the widget, doing this here feels very hacky */
   provider = gtk_css_provider_new ();
   gtk_css_provider_load_from_resource (provider, "/sm/puri/handy/styles/hdy-switcher.css");
   gtk_style_context_add_provider_for_screen (gdk_screen_get_default (),
@@ -721,7 +732,7 @@ hdy_switcher_bar_class_init (HdySwitcherBarClass *class)
 /**
  * hdy_switcher_bar_new:
  *
- * Create a #HdySwitcherBar with #GtkWindow:transient-for set to parent
+ * Create a #HdySwitcherBar, set #HdySwitcher:stack to use it
  *
  * C Usage
  * |[<!-- language="C" -->
@@ -738,7 +749,7 @@ hdy_switcher_bar_class_init (HdySwitcherBarClass *class)
  * switcher = Handy.SwitcherBar ()
  * ]|
  *
- * Since: 0.0.8
+ * Since: 0.0.9
  */
 GtkWidget *
 hdy_switcher_bar_new (void)

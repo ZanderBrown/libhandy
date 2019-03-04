@@ -13,15 +13,21 @@ G_DEFINE_INTERFACE (HdySwitcher, hdy_switcher, G_TYPE_OBJECT)
 
 /**
  * SECTION:hdy-switcher
- * @short_description: An adaptive switcher
+ * @short_description: A #GtkStack controller
  * @title: HdySwitcher
  * @See_also: #HdyPrimarySwitcher, #HdySwitcherBar
  * 
  * Something that can control a #GtkStack
  * 
+ * The main implementation is #HdySwitcherBar but responsive applications should use
+ * a pairing of #HdyPrimarySwitcher & #HdySecondarySwitcher helpers instead of
+ * using #HdySwitcherBar directly
+ * 
+ * ![](switchers.png)
+ * 
  * Design Information: [GitLab Issue](https://source.puri.sm/Librem5/libhandy/issues/64)
  * 
- * Since: 0.0.8
+ * Since: 0.0.9
  */
 
 static void
@@ -30,9 +36,10 @@ hdy_switcher_default_init (HdySwitcherInterface *iface)
   /**
    * HdySwitcher:icon-size:
    *
-   * Use the "icon-size" property to change the size of the images
+   * Use the "icon-size" property to hint the icons to use, you
+   * almost certainly wany to leave this as %GTK_ICON_SIZE_BUTTON
    *
-   * Since: 0.0.8
+   * Since: 0.0.9
    */
   g_object_interface_install_property (iface,
                                        g_param_spec_int ("icon-size",
@@ -47,9 +54,9 @@ hdy_switcher_default_init (HdySwitcherInterface *iface)
   /**
    * HdySwitcher:stack:
    *
-   * The #GtkStack the #HdySwitcherBar controls
+   * The #GtkStack the #HdySwitcher controls
    *
-   * Since: 0.0.8
+   * Since: 0.0.9
    */
   g_object_interface_install_property (iface,
                                        g_param_spec_object ("stack",
@@ -66,7 +73,7 @@ hdy_switcher_default_init (HdySwitcherInterface *iface)
  * @self: a #HdySwitcher
  * @icon_size: the new icon size
  *
- * Change the icon size of the images used in the #HdySwitcher
+ * Change the icon size hint for the icons in a #HdySwitcher
  * 
  * C Usage
  * |[<!-- language="C" -->
@@ -75,6 +82,7 @@ hdy_switcher_default_init (HdySwitcherInterface *iface)
  * 
  * Vala Usage
  * |[<!-- language="Vala" -->
+ * // Icon size isn't an enum so we must be explicit
  * switcher.icon_size = Gtk.IconSize.BUTTON;
  * ]|
  * 
@@ -83,7 +91,7 @@ hdy_switcher_default_init (HdySwitcherInterface *iface)
  * switcher.props.icon_size = Gtk.IconSize.BUTTON
  * ]|
  *
- * Since: 0.0.8
+ * Since: 0.0.9
  */
 void
 hdy_switcher_set_icon_size (HdySwitcher *self,
@@ -104,7 +112,7 @@ hdy_switcher_set_icon_size (HdySwitcher *self,
  * 
  * See: hdy_switcher_set_icon_size()
  *
- * Since: 0.0.8
+ * Since: 0.0.9
  */
 GtkIconSize
 hdy_switcher_get_icon_size (HdySwitcher *self)
@@ -142,7 +150,7 @@ hdy_switcher_get_icon_size (HdySwitcher *self)
  * switcher.props.stack = stack
  * ]|
  * 
- * Since: 0.0.8
+ * Since: 0.0.9
  */
 void
 hdy_switcher_set_stack (HdySwitcher *self,
@@ -165,7 +173,7 @@ hdy_switcher_set_stack (HdySwitcher *self,
  * 
  * Returns: (nullable) (transfer none): the #GtkStack, or %NULL if none has been set
  *
- * Since: 0.0.8
+ * Since: 0.0.9
  */
 GtkStack *
 hdy_switcher_get_stack (HdySwitcher *self)

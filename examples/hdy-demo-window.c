@@ -277,7 +277,7 @@ dialog_action_clicked_cb (GtkButton     *btn,
 
 static void
 switcher_demo_clicked_cb (GtkButton     *btn,
-                          ExampleWindow *self)
+                          HdyDemoWindow *self)
 {
   GtkBuilder *builder;
   GtkWidget  *win, *pswitch;
